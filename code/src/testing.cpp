@@ -31,21 +31,21 @@ void compute_awae() {
     const size_t numAttackers = 1;
     const std::uint64_t seed = 12345;
 
-    plug_in_est<long> est(seed, range_from, range_to);
+    // plug_in_est<long> est(seed, range_from, range_to);
 
-    std::vector<std::vector<long double>> all_awae;
-    for (size_t numSpecs = 1; numSpecs < maxNumSpecs; numSpecs++) {
-        std::vector<long double> awae_results;
-        for (long j = range_from; j <= range_to; j++) {
-            awae_results.push_back(est.estimate_leakage(static_cast<long (*)(std::map<long, long> &, const size_t &)>(compute_max<long>), numSamples, numTargets, numAttackers, numSpecs, {j}));
-        }
-        all_awae.push_back(awae_results);
-        std::cout << numSpecs << " : " << awae_results << endl;
-        // print(awae_results);
-    }
+    // std::vector<std::vector<long double>> all_awae;
+    // for (size_t numSpecs = 1; numSpecs < maxNumSpecs; numSpecs++) {
+    //     std::vector<long double> awae_results;
+    //     for (long j = range_from; j <= range_to; j++) {
+    //         awae_results.push_back(est.estimate_leakage(static_cast<long (*)(std::map<long, long> &, const size_t &)>(compute_max<long>), numSamples, numTargets, numAttackers, numSpecs, {j}));
+    //     }
+    //     all_awae.push_back(awae_results);
+    //     std::cout << numSpecs << " : " << awae_results << endl;
+    //     // print(awae_results);
+    // }
 
     std::uniform_int_distribution<int> dist(range_from, range_to);
-    plug_in_est_new<int, int, std::uniform_int_distribution> est2(seed, dist);
+    plug_in_est<int, int, std::uniform_int_distribution> est2(seed, dist);
 
     std::vector<std::vector<long double>> all_awae_new;
     for (size_t numSpecs = 1; numSpecs < maxNumSpecs; numSpecs++) {
@@ -64,7 +64,7 @@ void test_est() {
     const long qty = 10;
     const long N = 16;
     std::uniform_int_distribution<int> dist(0, 15);
-    plug_in_est_new<int, int, std::uniform_int_distribution> est(12345, dist);
+    plug_in_est<int, int, std::uniform_int_distribution> est(12345, dist);
 
     std::map<int, int> map = est.generateSamples(qty);
     std::vector<int> x_A = {};
