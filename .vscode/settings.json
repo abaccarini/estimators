@@ -1,0 +1,30 @@
+{
+    // "cmake.sourceDirectory": "/home/alessandro/Dropbox/estimators/code",
+    "cmake.buildDirectory": "${workspaceFolder}/code/build",
+    "cmake.debugConfig":{
+        "externalConsole": true,
+    },
+    "files.associations": {
+        "chrono": "cpp",
+        "array": "cpp",
+        "bitset": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "__split_buffer": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "variant": "cpp",
+        "iosfwd": "cpp",
+        "filesystem": "cpp",
+        "ios": "cpp",
+        "random": "cpp",
+        "functional": "cpp",
+        "span": "cpp"
+    },
+    "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "python.analysis.typeCheckingMode": "basic",
+    "cmake.sourceDirectory": "/home/alessandro/Dropbox/estimators/code",
+}
