@@ -43,7 +43,6 @@ void compute_awae() {
         std::cout << numSpecs << " : " << awae_results << endl;
         // print(awae_results);
     }
-    printf("\n");
 
     std::uniform_int_distribution<int> dist(range_from, range_to);
     plug_in_est_new<int, int, std::uniform_int_distribution> est2(seed, dist);
