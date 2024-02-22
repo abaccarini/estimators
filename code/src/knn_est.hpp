@@ -2,24 +2,19 @@
 
 #include "XoshiroCpp.hpp"
 #include "utilities.hpp"
-// #include <cmath>
-#include <ctgmath>
-
-// #include <functional>
 #include <algorithm>
+#include <ctgmath>
 #include <iostream>
 #include <stdexcept>
-// #include <iomanip>
-// #include <iostream>
-// #include <map>
-// #include <random>
 
 using std::vector;
 
+/// @brief returns the absolute value of an float
 inline float abs_value(float x) {
     return fabs(x);
 }
 
+/// @brief returns the absolute value of an integer
 inline int abs_value(int x) {
     return abs(x);
 }

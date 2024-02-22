@@ -25,6 +25,7 @@ find_package(GSL REQUIRED)
 find_package(MPFR REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED)
+# find_package(nlohmann_json REQUIRED)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
@@ -32,6 +33,7 @@ INCLUDE_DIRECTORIES(
   "${MPFR_INCLUDES}"
   "${GMP_INCLUDES}"
   "${CMAKE_SOURCE_DIR}/src"
+  "${CMAKE_SOURCE_DIR}/src/headers"
   "${EIGEN3_INCLUDE_DIR}"
   "${Boost_INCLUDE_DIRS}"
 )

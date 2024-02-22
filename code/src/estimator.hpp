@@ -3,12 +3,11 @@
 #include "XoshiroCpp.hpp"
 #include <cmath>
 #include <functional>
-#include <iomanip>
-#include <iostream>
 #include <map>
-#include <random>
+#include <stdexcept>
 
 #define EPSILON 0.0000000001
+
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 class plug_in_est {
 public:
@@ -19,7 +18,6 @@ public:
     std::map<IN_T, int> generateSamples(auto qty);
 
     long double estimate_H(std::map<IN_T, int> samples, const size_t num_samples);
-
 
     long double estimate_H_cond(std::function<OUT_T(std::map<IN_T, int> &, size_t)> func, const size_t &num_output_samples, const size_t &num_input_samples, std::vector<IN_T> x_T, std::vector<IN_T> x_A);
 
@@ -32,8 +30,7 @@ private:
 
 // range_from and range_to are INCLUSIVE, so values are sampled over the domain [range_from, range_to]
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-plug_in_est<IN_T, OUT_T, DIST_T>::plug_in_est(const std::uint64_t seed, DIST_T<IN_T> _dist) : rng_xos(seed), dist(_dist) {
-}
+plug_in_est<IN_T, OUT_T, DIST_T>::plug_in_est(const std::uint64_t seed, DIST_T<IN_T> _dist) : rng_xos(seed), dist(_dist) {}
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 IN_T plug_in_est<IN_T, OUT_T, DIST_T>::sample() {
@@ -103,7 +100,9 @@ long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT
 
     long double n = (long double)(range_to - range_from + 1);
     long double H_T = log2(n); // entropy of uniform RV
-
+    if(range_from > range_to)
+        throw std::runtime_error("range_from cannot be larger than range_to");
+ 
     // this needs to be replaced with an input generator for num_T > 1
     for (IN_T i = range_from; i <= range_to; i++) {
         H_O_XT_xA += (1.0 / n) * estimate_H_cond(func, num_samples, num_S, {i}, x_A);

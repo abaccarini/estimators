@@ -1,9 +1,12 @@
 #include "testing.hpp"
+#include "data_io.hpp"
 #include "estimator.hpp"
 #include "functions.hpp"
 #include "knn_est.hpp"
 #include "utilities.hpp"
-#include <chrono>
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_integration.h>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 #include <iomanip>
 #include <iostream>
@@ -14,11 +17,58 @@
 using std::cout;
 using std::endl;
 
+double test_fn(double x, void *p) {
+    test_obj<double, double> *params = (test_obj<double, double> *)p;
+    // double x_t_placeholder = x;
+    return params->evalute_fn(x) / sqrt(x);
+}
+
+double my_ln(double x) {
+    return log(x);
+}
+
+void test_gsl() {
+    /*
+    thoguhts about getting this to work:
+        would be better to add the function as a member of the knn_est class
+            this way the object knows what function its evaluating
+        add number of iterations
+        when calling the estimate() method, be able to pass the variable x
+            this is going to be used for x_T and/or x_a
+                actually, what if x_a is a member of the class?
+                such that its referenced automatuica
+     */
+    // typedef float d_type;
+    // std::uniform_real_distribution<d_type> dist(0.0, 1.0);
+    // knn_est<d_type, d_type, std::uniform_real_distribution> params(12345, dist);
+    gsl_integration_workspace *w = gsl_integration_workspace_alloc(1000);
+
+    double result, error;
+    double expected = -4.0;
+    test_obj<double, double> params(10, my_ln);
+
+    gsl_function F;
+    F.function = &test_fn;
+    F.params = &params;
+
+    gsl_integration_qags(&F, 0, 1, 0, 1e-7, 1000,
+                         w, &result, &error);
+
+    printf("result          = % .18f\n", result);
+    printf("exact result    = % .18f\n", expected);
+    printf("estimated error = % .18f\n", error);
+    printf("actual error    = % .18f\n", result - expected);
+    printf("intervals       = %zu\n", w->size);
+
+    gsl_integration_workspace_free(w);
+}
+
 void testing_main() {
-    compute_awae();
+    // compute_awae();
     // test_knn_est();
     // rng_testing_main();
     // test_est();
+    test_gsl();
 }
 
 void compute_awae() {
@@ -52,7 +102,7 @@ void compute_awae() {
         std::vector<long double> awae_results_2;
         for (int j = range_from; j <= range_to; j++) {
             awae_results_2.push_back(est2.estimate_leakage(
-                static_cast<int (*)(std::map<int, int> &, const size_t &)>(compute_max<int>), numSamples, numTargets, numAttackers, numSpecs, {j}, range_from, range_to)); // 
+                static_cast<int (*)(std::map<int, int> &, const size_t &)>(compute_max<int>), numSamples, numTargets, numAttackers, numSpecs, {j}, range_from, range_to)); //
         }
         all_awae_new.push_back(awae_results_2);
         std::cout << numSpecs << " : " << awae_results_2 << endl;
@@ -62,7 +112,7 @@ void compute_awae() {
 
 void test_est() {
     const long qty = 10;
-    const long N = 16;
+    // const long N = 16;
     std::uniform_int_distribution<int> dist(0, 15);
     plug_in_est<int, int, std::uniform_int_distribution> est(12345, dist);
 
@@ -95,15 +145,15 @@ void test_knn_est() {
     const unsigned long qty = 10;
 
     // NOTE the types used DO make a difference in speed (e.g. double v long double)
-    typedef float d_type;
     // typedef float dist_type ;
-    std::uniform_real_distribution<d_type> dist(0.0, 1.0);
     std::poisson_distribution<> pois(4);
-
     // std::cout << dist.max() << std::endl;
     std::cout << pois.max() << std::endl;
     std::cout << pois.min() << std::endl;
     // std::uniform_int_distribution<d_type> dist(0, 15);
+
+    typedef float d_type;
+    std::uniform_real_distribution<d_type> dist(0.0, 1.0);
     knn_est<d_type, d_type, std::uniform_real_distribution> est(seed, dist);
 
     // std::chrono::duration<double> elapsed_seconds;
