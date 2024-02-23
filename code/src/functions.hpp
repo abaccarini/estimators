@@ -2,8 +2,8 @@
 #define _FUNCTIONS_HPP_
 
 #include <cstddef>
-#include <iostream>
 #include <map>
+#include <numeric>
 #include <vector>
 
 // computes the median, but not "true" median if the num_samples is even
@@ -51,22 +51,20 @@ U compute_median(std::map<T, T> &map, const size_t &num_samples) {
 template <typename T, typename U>
 U compute_mean(std::map<T, T> &map, const size_t &num_samples) {
     U total = 0;
-    for (const auto &[num, count] : map) 
+    for (const auto &[num, count] : map)
         total += count * num;
     return total / static_cast<U>(num_samples);
 }
-
 
 // computes the unbiased sample variance (Bessel's correction)
 // summation is divided by (num_samples - 1)
 template <typename T, typename U>
 U compute_var(std::map<T, T> &map, const size_t &num_samples) {
-    U mu = compute_mean<T,U>(map, num_samples);
+    U mu = compute_mean<T, U>(map, num_samples);
     U total = 0;
-    for (const auto &[num, count] : map) 
-        total += static_cast<U>(count)*(static_cast<U>(num) - mu)*(static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
     return total / static_cast<U>(num_samples - 1);
-
 }
 
 // added num_samples argument just so that every function has the same format
@@ -85,13 +83,17 @@ T compute_min(std::map<T, T> &map, const size_t &num_samples) {
 // static_cast<T (*)(std::map<T, T> &, const size_t &)>(compute_max<T>)
 template <typename T>
 T compute_max(std::vector<T> &vec, const size_t &num_samples) {
-    return max(vec.begin(), vec.end());;
+    return max(vec.begin(), vec.end());
 }
 
 template <typename T>
 T compute_min(std::vector<T> &vec, const size_t &num_samples) {
-    return min(vec.begin(), vec.end());;
+    return min(vec.begin(), vec.end());
 }
 
+template <typename T>
+T compute_sum(std::vector<T> &vec, const size_t &num_samples) {
+    return std::accumulate(vec.begin(), vec.end(), static_cast<T>(0));
+}
 
 #endif // _FUNCTIONS_HPP_

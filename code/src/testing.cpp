@@ -17,6 +17,11 @@
 using std::cout;
 using std::endl;
 
+vector<int> return_vec() {
+    vector<int> x = {1, 2, 3};
+    return x;
+}
+
 double test_fn(double x, void *p) {
     test_obj<double, double> *params = (test_obj<double, double> *)p;
     // double x_t_placeholder = x;
@@ -36,7 +41,7 @@ void test_gsl() {
         when calling the estimate() method, be able to pass the variable x
             this is going to be used for x_T and/or x_a
                 actually, what if x_a is a member of the class?
-                such that its referenced automatuica
+                such that its referenced automatuically
      */
     // typedef float d_type;
     // std::uniform_real_distribution<d_type> dist(0.0, 1.0);
@@ -46,7 +51,8 @@ void test_gsl() {
     double result, error;
     double expected = -4.0;
     test_obj<double, double> params(10, my_ln);
-
+    params.set_x_A(15.0);
+    std::cout << params.get_x_A() << std::endl;
     gsl_function F;
     F.function = &test_fn;
     F.params = &params;
@@ -65,10 +71,10 @@ void test_gsl() {
 
 void testing_main() {
     // compute_awae();
-    // test_knn_est();
+    test_knn_est();
     // rng_testing_main();
     // test_est();
-    test_gsl();
+    // test_gsl();
 }
 
 void compute_awae() {
@@ -141,50 +147,55 @@ void test_est() {
 }
 
 void test_knn_est() {
-    const std::uint64_t seed = 12345;
-    const unsigned long qty = 10;
+    const std::uint64_t seed = 12346;
+    const size_t qty = 100000;
 
     // NOTE the types used DO make a difference in speed (e.g. double v long double)
-    // typedef float dist_type ;
-    std::poisson_distribution<> pois(4);
-    // std::cout << dist.max() << std::endl;
-    std::cout << pois.max() << std::endl;
-    std::cout << pois.min() << std::endl;
-    // std::uniform_int_distribution<d_type> dist(0, 15);
+    typedef long double d_type;
 
-    typedef float d_type;
-    std::uniform_real_distribution<d_type> dist(0.0, 1.0);
-    knn_est<d_type, d_type, std::uniform_real_distribution> est(seed, dist);
+    const size_t numSpecs = 1;
+    const size_t numTargets = 1;
+    const uint k = 1;
 
-    // std::chrono::duration<double> elapsed_seconds;
-    // auto start = std::chrono::system_clock::now();
-    std::map<int, int> hist;
-    std::vector<d_type> samples(qty);
-    for (size_t i = 0; i < qty; i++) {
-        ++hist[std::round(est.sample_input_data())];
-        samples[i] = est.sample_input_data();
+    // std::uniform_real_distribution<d_type> dist(0.0, 1.0);
+    std::normal_distribution<d_type> dist(0.0, 2.0);
+    knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, compute_sum<d_type>, qty, numSpecs, numTargets, k);
+    vector<d_type> x_A = {0.5};
+    est.set_x_A(x_A);
+    // cout<<est.generateSamples(numSpecs + numTargets,x_A[0])<<endl;
+    // cout<<est.evaluate_pdf(0.5)<<endl;
+    size_t trials = 500;
+    long double res = 0.0;
+    long double error = 0.0;
+    long double actual = 0.5 * log2(2.0 * M_PI * M_E * 2.0 * 2.0);
+    for (size_t i = 0; i < trials; i++) {
+        auto val = est.estimate_h();
+        res += val;
+        error += (val - actual) * (val - actual);
     }
-    // cout<<samples<<endl;
-    sort(samples.begin(), samples.end());
-    // printVector(samples);
-    cout << samples << endl;
+    res /= static_cast<long double>(trials);
+    error /= static_cast<long double>(trials);
+    cout << "estimated = " << res << endl;
+    cout << "actual    = " << actual << endl;
+    cout << "(?) MSE   = " << error << endl;
 
-    std::vector<d_type> knn = est.kNN(samples, 2);
-    // printVector(knn);
-    cout << samples << endl;
-    cout << knn << endl;
-    for (size_t i = 0; i < qty; i++) {
-        cout << "(" << samples[i] << "->" << knn[i] << "), ";
-    }
-    std::cout << std::endl;
-    // delete dist;
-
-    // const std::lognormal_distribution<> dist2(1.6, 0.25);
-    // knn_est<long double, std::uniform_real_distribution<>> est2(seed, dist);
+    // std::map<int, int> hist;
+    // std::vector<d_type> samples(qty);
     // for (size_t i = 0; i < qty; i++) {
-    //     cout<<est.sample()<<endl;
+    //     ++hist[std::round(est.sample_input_data())];
+    //     samples[i] = est.sample_input_data();
     // }
-    // auto end = std::chrono::system_clock::now();
-    // elapsed_seconds = end - start;
-    // cout << "(knn_rng)   elapsed time for " << qty << " : " << elapsed_seconds.count() << "s" << endl;
+    // // cout<<samples<<endl;
+    // sort(samples.begin(), samples.end());
+    // // printVector(samples);
+    // cout << samples << endl;
+
+    // std::vector<d_type> knn = est.kNN(samples, 2);
+    // // printVector(knn);
+    // cout << samples << endl;
+    // cout << knn << endl;
+    // for (size_t i = 0; i < qty; i++) {
+    //     cout << "(" << samples[i] << "->" << knn[i] << "), ";
+    // }
+    // std::cout << std::endl;
 }

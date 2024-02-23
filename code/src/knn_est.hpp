@@ -1,22 +1,45 @@
 #pragma once
 
 #include "XoshiroCpp.hpp"
+#include "pdfs.hpp"
 #include "utilities.hpp"
 #include <algorithm>
+#include <boost/math/special_functions/digamma.hpp>
 #include <ctgmath>
+#include <exception>
 #include <iostream>
+#include <random>
 #include <stdexcept>
+#include <type_traits>
 
 using std::vector;
 
 /// @brief returns the absolute value of an float
 inline float abs_value(float x) {
+    return fabsf(x);
+}
+
+/// @brief returns the absolute value of an double
+inline float abs_value(double x) {
     return fabs(x);
+}
+
+/// @brief returns the absolute value of an double
+inline float abs_value(long double x) {
+    return fabsl(x);
 }
 
 /// @brief returns the absolute value of an integer
 inline int abs_value(int x) {
     return abs(x);
+}
+/// @brief returns the absolute value of an integer
+inline int abs_value(long int x) {
+    return labs(x);
+}
+/// @brief returns the absolute value of an integer
+inline int abs_value(long long int x) {
+    return llabs(x);
 }
 
 // IN_T    : type of raw input into the function
@@ -25,27 +48,72 @@ inline int abs_value(int x) {
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 class knn_est {
 public:
-    knn_est(const std::uint64_t seed, DIST_T<IN_T> _dist);
+    knn_est(const std::uint64_t seed, DIST_T<IN_T> _dist, std::function<OUT_T(vector<IN_T> &, size_t)> func, size_t _num_samples, size_t numS, size_t numT, uint _k);
     ~knn_est(){};
 
     IN_T sample_input_data();
+
     vector<IN_T> generateSamples(const auto qty);
+    vector<IN_T> generateSamples(const auto qty, IN_T x_T);
+    vector<IN_T> generateSamples(const auto qty, IN_T x_T, vector<IN_T> &x_A);
+    void generateSamples(vector<IN_T> &results, const auto qty, IN_T x_T, vector<IN_T> &x_A);
+
     vector<OUT_T> kNN(vector<OUT_T> &samples, const int k);
+
+    void set_x_A(vector<IN_T> &x);
+    vector<IN_T> get_x_A();
+    IN_T evaluate_pdf(IN_T x); // only used for integration
+
+    long double estimate_h(IN_T x_T);
+    long double estimate_h(); // corretcness testing only
 
 private:
     XoshiroCpp::Xoshiro256PlusPlus rng_xos;
     DIST_T<IN_T> dist; // any distribution provided in <random>, as to avoid inverse transform sampling
+    // does <random> allow access to the pdf of dist?
+
+    // the function we are evaluating, stored in the estimator object
+    std::function<OUT_T(vector<IN_T> &, size_t)> func;
+
+    const size_t num_samples; // the number of output samples we produce
+    const size_t numS;
+    const size_t numT;
+    vector<IN_T> x_A;
+
+    uint k; // kth nearest neighbor
 };
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-knn_est<IN_T, OUT_T, DIST_T>::knn_est(const std::uint64_t seed, DIST_T<IN_T> _dist) : rng_xos(seed), dist(_dist) {}
+knn_est<IN_T, OUT_T, DIST_T>::knn_est(const std::uint64_t seed, DIST_T<IN_T> _dist,
+                                      std::function<OUT_T(vector<IN_T> &, size_t)> _func,
+                                      size_t _num_samples,
+                                      size_t _numS,
+                                      size_t _numT,
+                                      uint _k) : rng_xos(seed),
+                                                 dist(_dist),
+                                                 func(_func),
+                                                 num_samples(_num_samples),
+                                                 numS(_numS),
+                                                 numT(_numT),
+                                                 k(_k) {}
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 IN_T knn_est<IN_T, OUT_T, DIST_T>::sample_input_data() {
     return dist(rng_xos);
 }
 
-// populating vector of samples
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+void knn_est<IN_T, OUT_T, DIST_T>::set_x_A(vector<IN_T> &x) {
+    x_A = x;
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::get_x_A() {
+    return x_A;
+}
+
+// if this is inside an integral evaluation, only produce one set
+// populating vector of samplesp
 // cant use mapping here because samples can be continuous/not discertized
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty) {
@@ -56,6 +124,34 @@ vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty) {
     return result;
 }
 
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty, IN_T x_T) {
+    vector<IN_T> result(qty + 1);
+    for (auto i = 0; i < qty; i++) {
+        result[i] = sample_input_data();
+    }
+    result[qty] = x_T;
+    return result;
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty, IN_T x_T, vector<IN_T> &x_A) {
+    vector<IN_T> result(qty + 1 + x_A.size());
+    for (auto i = 0; i < qty; i++)
+        result[i] = sample_input_data();
+    result[qty] = x_T;
+    result[qty + 1] = x_A[0]; // this is only for one attacker input
+    return result;
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+void knn_est<IN_T, OUT_T, DIST_T>::generateSamples(vector<IN_T> &result, const auto qty, IN_T x_T, vector<IN_T> &x_A) {
+    for (auto i = 0; i < qty; i++)
+        result[i] = sample_input_data();
+    result[qty] = x_T;
+    result[qty + 1] = x_A[0]; // this is only for one attacker input
+}
+
 // wait, we only need to sort samples once (when its first generated and all spectator inputs)
 // then we need to insert X_A and X_T,  (worst case O(n))
 // so lets assume <samples> is sorted
@@ -63,13 +159,10 @@ vector<IN_T> knn_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty) {
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 vector<OUT_T> knn_est<IN_T, OUT_T, DIST_T>::kNN(vector<OUT_T> &samples, const int k) {
     try {
-
         auto qty = samples.size();
         if (k >= qty)
             throw std::out_of_range("k cannot be larger than the number of samples");
-
         // sort(samples.begin(), samples.end()); // standard sort, O(n log n)
-
         vector<IN_T> result(qty);                       // pre-allocating result
         result[0] = abs_value(samples[0] - samples[k]); // knn can be read directly
 
@@ -83,14 +176,12 @@ vector<OUT_T> knn_est<IN_T, OUT_T, DIST_T>::kNN(vector<OUT_T> &samples, const in
             // calculate how many items are available to look at
             lower_bound = i < k ? i : k;
             lower_offset = i < k ? k - i : 0;
-
             upper_bound = (i > (qty - 1 - k)) ? qty - 1 - i : k;
             upper_offset = (i > (qty - 1 - k)) ? k - (qty - 1 - i) : 0;
 
             for (auto j = 0; j < upper_bound; j++) { // looking right
                 distances[ctr++] = abs_value(samples[i] - samples[i + j + 1]);
             }
-
             for (auto j = 0; j < lower_bound; j++) { // looking left
                 distances[ctr++] = abs_value(samples[i] - samples[i - (j + 1)]);
             }
@@ -105,5 +196,74 @@ vector<OUT_T> knn_est<IN_T, OUT_T, DIST_T>::kNN(vector<OUT_T> &samples, const in
     } catch (const std::exception &ex) {
         std::cerr << "(kNN) " << ex.what() << std::endl;
         exit(1);
+    }
+}
+
+// we are forced (for every integration iteration) to re-sample the data, since the sample vector will almost certainly change with every x_T that is evaluated
+// x_T will be determined by the integration algorithm
+// the estimator uses the natural logarithm inside
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+long double knn_est<IN_T, OUT_T, DIST_T>::estimate_h(IN_T x_T) {
+    // generate samples inside here
+    // sort (for kNN calculation)
+    // vector<OUT_T> samples = {generateSamples(num_samples), x_T, x_A}; // this doesnt work
+    vector<OUT_T> distances(num_samples);
+    auto numInputs = numS + numT + x_A.size();
+    // vector<IN_T> samples(numInputs);
+    vector<IN_T> samples;
+
+    for (size_t i = 0; i < num_samples; i++) {
+        // generateSamples(samples, numS, x_T, x_A);
+        samples = generateSamples(numS, x_T, x_A); // this takes advantage of return value optimization
+        // std::cout << "samples[" << i << "] = " << samples << " : func() = "<<func(samples, numInputs)<<std::endl;
+
+        distances[i] = func(samples, numInputs);
+    }
+    sort(distances.begin(), distances.end()); // standard sort, O(n log n)
+    // std::cout << "distances = " << distances << std::endl;
+    distances = kNN(distances, k); // computing the
+
+    long double result = 0.0;
+    static const long double c_d_p = 2.0; // d = 1, p is always 2 for 1D euclidean distance (equiv to manhattan )
+    for (size_t i = 0; i < num_samples; i++) {
+        // result += log(static_cast<long double>(num_samples) * c_d_p * distances[i] / static_cast<long double>(k));
+        result += log(static_cast<long double>(num_samples)) + log(c_d_p) + log(distances[i]) - log(static_cast<long double>(k));
+    }
+
+    return ((1.0 / static_cast<long double>(num_samples)) * result + log(static_cast<long double>(k)) - boost::math::digamma(static_cast<long double>(k))) * log2(M_E); // need to convert from nats to bits
+}
+
+// general estimator used just for testing estimator correctness
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+long double knn_est<IN_T, OUT_T, DIST_T>::estimate_h() {
+    // generate samples inside here
+    // sort (for kNN calculation)
+    vector<OUT_T> distances = generateSamples(num_samples);
+    sort(distances.begin(), distances.end()); // standard sort, O(n log n)
+    // std::cout << "distances = " << distances << std::endl;
+    distances = kNN(distances, k); // computing the
+
+    long double result = 0.0;
+    static const long double c_d_p = 2.0; // d = 1, p is always 2 for 1D euclidean distance (equiv to manhattan )
+    for (size_t i = 0; i < num_samples; i++) {
+        result += log((static_cast<long double>(num_samples) * c_d_p * distances[i]) / static_cast<long double>(k)); // no difference between these two versions (exact same)
+        // result += log(static_cast<long double>(num_samples)) + log(c_d_p) + log(distances[i] )-  log(static_cast<long double>(k)); // no difference between these two versions (exact same)
+    }
+
+    return ((1.0 / static_cast<long double>(num_samples)) * result + log(static_cast<long double>(k)) - boost::math::digamma(static_cast<long double>(k))) * log2(M_E); // need to convert from nats to bits
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+IN_T knn_est<IN_T, OUT_T, DIST_T>::evaluate_pdf(IN_T x_T) {
+    try {
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::normal_distribution<IN_T>>)
+            return normal_pdf(x_T, dist.mean(), dist.stddev());
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::uniform_real_distribution<IN_T>>)
+            return uniform_real_pdf(x_T, dist.a(), dist.b());
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::lognormal_distribution<IN_T>>)
+            return lognormal_pdf(x_T, dist.m(), dist.s());
+        throw std::runtime_error("unsupported distribution encountered, please add the pdf of the distribution you want in pdfs.hpp, as well as additional \"if\" block here.");
+    } catch (const std::exception &ex) {
+        std::cerr << "(evaluate_pdf): " << ex.what() << std::endl;
     }
 }

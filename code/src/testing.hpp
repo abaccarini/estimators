@@ -30,6 +30,9 @@ public:
     void set_x_A(IN_T x){
         x_A = x;
     };
+    IN_T get_x_A(){
+        return x_A;
+    };
     OUT_T evalute_fn(IN_T x){
         return func(x);
     };

@@ -23,10 +23,16 @@ $$
 - in the function `gsl_func`, the args are `x` and `params`
 - propose using the estimator object *as* the params variable
 - several things need to be added to the `knn_est` class in order for this to be feasible
-  - first check that GSL will actually work as expected if using a `class` instead of a `struct`.
+  - first check that GSL will actually work as expected if using a `class` instead of a `struct`. (it does work, why wouldn't it? to GSL, a pointer is a pointer, regardless of what it points *to*)
   - the function $f$ itself that we are evaluating
     - the "params" object (which is passed into the integrator) knows what function to evaluate
   - the number of iterations for the kNN estimator 
   - when calling `estimate()`, the value $x_A$ will be fixed (iterated through in a higher-up function which is performing the experiment)
     - therefore, it needs to be a member of the object as well
     - in subsequent experimental evaluations (different $x_A$), we need to update the member variable accordingly
+
+
+- i feel like the summation in the estimator is getting thrown off with a large number of samples 
+  - repeating the calculation (with a different seed) does seem to remove the variance, such that after a sufficient number of trials, we will converge to the "true" entropy
+    - Gao et al. use 500 trials in Figure 1.
+- 
