@@ -2,6 +2,7 @@
 #ifndef _UTILITIES_HPP_
 #define _UTILITIES_HPP_
 
+#include <random>
 #include <iostream>
 #include <vector>
 using std::ostream;
@@ -39,6 +40,7 @@ ostream& operator<< (ostream& out, const vector<T>& v) {
     out << "]";
     return out;
 }
+
 // template<typename T>
 // void printVector(const T& t) {
 //     std::copy(t.cbegin(), t.cend(), std::ostream_iterator<typename T::value_type>(std::cout, ", "));

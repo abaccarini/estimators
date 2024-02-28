@@ -3,6 +3,7 @@
 #include "XoshiroCpp.hpp"
 #include "pdfs.hpp"
 #include "utilities.hpp"
+#include "functions.hpp"
 #include <algorithm>
 #include <boost/math/special_functions/digamma.hpp>
 #include <ctgmath>
@@ -66,6 +67,8 @@ public:
 
     long double estimate_h(IN_T x_T);
     long double estimate_h(); // corretcness testing only
+
+    std::string get_func_type();
 
 private:
     XoshiroCpp::Xoshiro256PlusPlus rng_xos;
@@ -267,3 +270,27 @@ IN_T knn_est<IN_T, OUT_T, DIST_T>::evaluate_pdf(IN_T x_T) {
         std::cerr << "(evaluate_pdf): " << ex.what() << std::endl;
     }
 }
+
+template<typename T, typename... U>
+size_t getAddress(std::function<T(U...)> f) {
+    typedef T(fnType)(U...);
+    fnType ** fnPointer = f.template target<fnType*>();
+    return (size_t) *fnPointer;
+}
+
+// template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+// std::string knn_est<IN_T, OUT_T, DIST_T>::get_func_type() {
+//     std::function<IN_T(std::vector<IN_T>&, const size_t &)> test = &compute_sum;
+//     if(getAddress(func) == getAddress(test)){
+//         printf("func is sum\n");
+//     }else {
+//         printf("func is not sum\n");
+
+//     }
+// //     if(getAddress(func) == getAddress(std::function<IN_T>( compute_max))){
+// //         printf("func is max\n");
+// //     }else {
+// //         printf("func is not max\n");
+// //     }
+// }
+

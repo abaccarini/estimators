@@ -8,7 +8,7 @@
 
 // computes the median, but not "true" median if the num_samples is even
 template <typename T>
-T compute_median_min(std::map<T, T> &map, const size_t &num_samples) {
+T compute_median_min(std::map<T, size_t> &map, const size_t &num_samples) {
     auto n = (num_samples) / 2;
     auto total = 0;
     // this is better than trying to create a vector of all the values in the map,
@@ -27,7 +27,7 @@ T compute_median_min(std::map<T, T> &map, const size_t &num_samples) {
 }
 
 template <typename T, typename U>
-U compute_median(std::map<T, T> &map, const size_t &num_samples) {
+U compute_median(std::map<T, size_t> &map, const size_t &num_samples) {
     auto n = (num_samples) / 2;
     auto total = 0;
     if (!(num_samples & 1)) // if there is an even number of samples, do the following
@@ -49,7 +49,7 @@ U compute_median(std::map<T, T> &map, const size_t &num_samples) {
 }
 
 template <typename T, typename U>
-U compute_mean(std::map<T, T> &map, const size_t &num_samples) {
+U compute_mean(std::map<T, size_t> &map, const size_t &num_samples) {
     U total = 0;
     for (const auto &[num, count] : map)
         total += count * num;
@@ -59,7 +59,7 @@ U compute_mean(std::map<T, T> &map, const size_t &num_samples) {
 // computes the unbiased sample variance (Bessel's correction)
 // summation is divided by (num_samples - 1)
 template <typename T, typename U>
-U compute_var(std::map<T, T> &map, const size_t &num_samples) {
+U compute_var(std::map<T, size_t> &map, const size_t &num_samples) {
     U mu = compute_mean<T, U>(map, num_samples);
     U total = 0;
     for (const auto &[num, count] : map)
@@ -67,15 +67,26 @@ U compute_var(std::map<T, T> &map, const size_t &num_samples) {
     return total / static_cast<U>(num_samples - 1);
 }
 
+template <typename T, typename U>
+std::pair<U,U> compute_var_mean(std::map<T, size_t> &map, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(map, num_samples);
+    U total = 0;
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+    
+    return { total / static_cast<U>(num_samples - 1), mu };
+}
+
+
 // added num_samples argument just so that every function has the same format
 // good for now, may need to modify estimate_H_cond later for more complex functions
 template <typename T>
-T compute_max(std::map<T, T> &map, const size_t &num_samples) {
+T compute_max(std::map<T, size_t> &map, const size_t &num_samples) {
     return (--map.end())->first;
 }
 
 template <typename T>
-T compute_min(std::map<T, T> &map, const size_t &num_samples) {
+T compute_min(std::map<T, size_t> &map, const size_t &num_samples) {
     return (map.begin())->first;
 }
 

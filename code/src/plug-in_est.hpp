@@ -1,5 +1,6 @@
-#ifndef _ESTIMATOR_HPP_
-#define _ESTIMATOR_HPP_
+#ifndef _PLUG_IN_EST_HPP_
+#define _PLUG_IN_EST_HPP_
+
 #include "XoshiroCpp.hpp"
 #include <cmath>
 #include <functional>
@@ -15,13 +16,13 @@ public:
     ~plug_in_est(){};
 
     IN_T sample();
-    std::map<IN_T, int> generateSamples(auto qty);
+    std::map<IN_T, size_t> generateSamples(auto qty);
 
-    long double estimate_H(std::map<IN_T, int> samples, const size_t num_samples);
+    long double estimate_H(std::map<IN_T, size_t> samples, const size_t num_samples);
 
-    long double estimate_H_cond(std::function<OUT_T(std::map<IN_T, int> &, size_t)> func, const size_t &num_output_samples, const size_t &num_input_samples, std::vector<IN_T> x_T, std::vector<IN_T> x_A);
+    long double estimate_H_cond(std::function<OUT_T(std::map<IN_T, size_t> &, size_t)> func, const size_t &num_output_samples, const size_t &num_input_samples, std::vector<IN_T> x_T, std::vector<IN_T> x_A);
 
-    long double estimate_leakage(std::function<OUT_T(std::map<IN_T, int> &, size_t)> func, const size_t &num_samples, const size_t &num_T, const size_t &num_A, const size_t &num_S, std::vector<IN_T> x_A, const int range_from, const int range_to);
+    long double estimate_leakage(std::function<OUT_T(std::map<IN_T, size_t> &, size_t)> func, const size_t &num_samples, const size_t &num_T, const size_t &num_A, const size_t &num_S, std::vector<IN_T> x_A, const IN_T range_from, const IN_T range_to);
 
 private:
     XoshiroCpp::Xoshiro256PlusPlus rng_xos;
@@ -38,8 +39,8 @@ IN_T plug_in_est<IN_T, OUT_T, DIST_T>::sample() {
 }
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-std::map<IN_T, int> plug_in_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty) {
-    std::map<IN_T, int> ptr;
+std::map<IN_T, size_t> plug_in_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto qty) {
+    std::map<IN_T, size_t> ptr;
     for (size_t i = 0; i < qty; i++) {
         ++ptr[sample()];
     }
@@ -47,7 +48,7 @@ std::map<IN_T, int> plug_in_est<IN_T, OUT_T, DIST_T>::generateSamples(const auto
 }
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H(std::map<IN_T, int> samples, const size_t num_samples) {
+long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H(std::map<IN_T, size_t> samples, const size_t num_samples) {
     // samples: frequency table mapping an input -> no. occurences
     // num_samples: sum of all values in map (the amount of sample data)
     long double p_n = 0.0;
@@ -67,9 +68,9 @@ long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H(std::map<IN_T, int> sam
 // the vector component allows us to know (in constant time) if the argument was provided
 // num_output_samples corresponds to the actual amount of data we want to feed the estimator (should be "large")
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H_cond(std::function<OUT_T(std::map<IN_T, int> &, size_t)> func, const size_t &num_output_samples, const size_t &num_input_samples, std::vector<IN_T> x_T, std::vector<IN_T> x_A) {
-    std::map<IN_T, int> input_data;
-    std::map<OUT_T, int> output_data;
+long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H_cond(std::function<OUT_T(std::map<IN_T, size_t> &, size_t)> func, const size_t &num_output_samples, const size_t &num_input_samples, std::vector<IN_T> x_T, std::vector<IN_T> x_A) {
+    std::map<IN_T, size_t> input_data;
+    std::map<OUT_T, size_t> output_data;
 
     for (size_t i = 0; i < num_output_samples; i++) {
         input_data = generateSamples(num_input_samples); // this is properly generated
@@ -91,7 +92,7 @@ long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H_cond(std::function<OUT_
 // computes the awae given an x_A value
 // can you reuse SPECTATOR samples generated in H_O_XT_xA when computing H_O_xA?
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
-long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT_T(std::map<IN_T, int> &, size_t)> func, const size_t &num_samples, const size_t &num_T, const size_t &num_A, const size_t &num_S, std::vector<IN_T> x_A, const int range_from, const int range_to) {
+long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT_T(std::map<IN_T, size_t> &, size_t)> func, const size_t &num_samples, const size_t &num_T, const size_t &num_A, const size_t &num_S, std::vector<IN_T> x_A, IN_T range_from, IN_T range_to) {
 
     // H_T can be computed exactly
     long double H_O_XT_xA = 0.0, H_O_xA = 0.0;
@@ -116,4 +117,4 @@ long double plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT
     return (H_T + H_O_XT_xA - H_O_xA);
 }
 
-#endif // _ESTIMATOR_HPP_
+#endif 
