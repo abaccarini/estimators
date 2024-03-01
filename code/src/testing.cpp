@@ -1,8 +1,9 @@
 #include "testing.hpp"
 #include "data_io.hpp"
-#include "plug-in_est.hpp"
+#include "experiment.hpp"
 #include "functions.hpp"
 #include "knn_est.hpp"
+#include "plug-in_est.hpp"
 #include "utilities.hpp"
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
@@ -71,9 +72,12 @@ void test_gsl() {
 
 void testing_main() {
     // compute_awae();
+    batch_exp("max");
+    batch_exp("median");
+    batch_exp("var");
     // test_knn_est();
     // rng_testing_main();
-    test_est();
+    // test_est();
     // test_gsl();
 }
 
@@ -95,34 +99,15 @@ void compute_awae() {
     plug_in_est<in_type, out_type, std::uniform_int_distribution> est2(seed, dist);
 
     std::map<size_t, std::map<in_type, long double>> awae_data;
-
-    // std::vector<std::vector<long double>> all_awae_new;
     for (size_t numSpecs = 1; numSpecs < maxNumSpecs; numSpecs++) {
         std::map<in_type, long double> awae_vals;
-        // std::vector<long double> awae_results_2;
         for (in_type j = range_from; j <= range_to; j++) {
-            awae_vals.insert({j,
-                              est2.estimate_leakage(
-                                  static_cast<out_type (*)(std::map<in_type, size_t> &, const size_t &)>(compute_max<in_type>),
-                                  // compute_max,
-                                  numSamples, numTargets, numAttackers, numSpecs, {j}, range_from, range_to)
-
-            });
-            // awae_results_2.push_back(est2.estimate_leakage(
-            //     static_cast<int (*)(std::map<int, int> &, const size_t &)>(compute_max<int>), numSamples, numTargets, numAttackers, numSpecs, {j}, range_from, range_to));
+            awae_vals.insert({j, est2.estimate_leakage(static_cast<out_type (*)(std::map<in_type, size_t> &, const size_t &)>(compute_max<in_type>), numSamples, numTargets, numAttackers, numSpecs, {j}, range_from, range_to)});
         }
         awae_data.insert({numSpecs, awae_vals});
-        // ++awae_data[awae_vals];
-        // all_awae_new.push_back(awae_results_2);
-        // std::cout << numSpecs << " : " << awae_results_2 << endl;
     }
-    discrete_data<in_type, out_type, std::uniform_int_distribution> dd = {"max",
-                                                                          dist,
-                                                                          numSamples,
-                                                                          numTargets,
-                                                                          numAttackers,
-                                                                          numIterations,
-                                                                          awae_data};
+
+    discrete_data<in_type, out_type, std::uniform_int_distribution> dd = {"max", dist, numSamples, numTargets, numAttackers, numIterations, est2.target_init_entropy, awae_data};
 
     writeJSON_discrete<in_type, out_type, std::uniform_int_distribution>(dd);
 }
@@ -151,8 +136,8 @@ void test_est() {
     std::cout << "mean:" << compute_mean<int, double>(map, qty + x_A.size()) << std::endl;
     std::cout << "stdev:" << compute_var<int, double>(map, qty + x_A.size()) << std::endl;
 
-    std::pair<double,double> var_mean_res ( compute_var_mean<int, double>(map, qty + x_A.size()));
-    std::cout << "stdev_mu:" << var_mean_res.first << ", "<<var_mean_res.second<<std::endl;
+    std::pair<double, double> var_mean_res(compute_var_mean<int, double>(map, qty + x_A.size()));
+    std::cout << "stdev_mu:" << var_mean_res.first << ", " << var_mean_res.second << std::endl;
     //     std::vector<int> x_T = {5};
     //     std::vector<int> x_A_v = {};
     //     est.estimate_H_cond(compute_median_min<int>, 2, 4, x_T, x_A_v);

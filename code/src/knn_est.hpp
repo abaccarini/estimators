@@ -3,7 +3,6 @@
 #include "XoshiroCpp.hpp"
 #include "pdfs.hpp"
 #include "utilities.hpp"
-#include "functions.hpp"
 #include <algorithm>
 #include <boost/math/special_functions/digamma.hpp>
 #include <ctgmath>
@@ -14,6 +13,7 @@
 #include <type_traits>
 
 using std::vector;
+using entType = long double; 
 
 /// @brief returns the absolute value of an float
 inline float abs_value(float x) {
