@@ -1,12 +1,7 @@
 #ifndef _TESTING_HPP_
 #define _TESTING_HPP_
 
-#include "XoshiroCpp.hpp"
-#include "utilities.hpp"
-#include <algorithm>
-#include <ctgmath>
-#include <iostream>
-#include <stdexcept>
+#include <functional>
 
 
 void testing_main();

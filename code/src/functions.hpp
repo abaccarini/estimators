@@ -67,16 +67,35 @@ U compute_var(std::map<T, size_t> &map, const size_t &num_samples) {
     return total / static_cast<U>(num_samples - 1);
 }
 
+// same as above, but with no division at the end
 template <typename T, typename U>
-std::pair<U,U> compute_var_mean(std::map<T, size_t> &map, const size_t &num_samples) {
+U compute_var_nd(std::map<T, size_t> &map, const size_t &num_samples) {
     U mu = compute_mean<T, U>(map, num_samples);
     U total = 0;
     for (const auto &[num, count] : map)
         total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
-    
-    return { total / static_cast<U>(num_samples - 1), mu };
+    return total;
 }
 
+template <typename T, typename U>
+std::pair<U, U> compute_var_mean(std::map<T, size_t> &map, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(map, num_samples);
+    U total = 0;
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+
+    return {total / static_cast<U>(num_samples - 1), mu};
+}
+
+template <typename T, typename U>
+std::pair<U, U> compute_var_mean_nd(std::map<T, size_t> &map, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(map, num_samples);
+    U total = 0;
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+
+    return {total, mu};
+}
 
 // added num_samples argument just so that every function has the same format
 // good for now, may need to modify estimate_H_cond later for more complex functions

@@ -72,9 +72,13 @@ void test_gsl() {
 
 void testing_main() {
     // compute_awae();
-    batch_exp("max");
-    batch_exp("median");
-    batch_exp("var");
+    // batch_exp_discrete_uniform("max");
+    // batch_exp_discrete_uniform("median");
+    // batch_exp_discrete_uniform("var");
+    // batch_exp_discrete_uniform("var_nd");
+    batch_exp_poisson("median");
+    batch_exp_poisson("max");
+    batch_exp_poisson("var_nd");
     // test_knn_est();
     // rng_testing_main();
     // test_est();

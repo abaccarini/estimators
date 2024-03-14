@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(estimator LANGUAGES C CXX)
 
+
 SET(CMAKE_COLOR_MAKEFILE ON)
 
 set(CMAKE_C_FLAGS "-Wall")

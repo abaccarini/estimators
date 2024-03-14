@@ -2,7 +2,6 @@
 #ifndef _UTILITIES_HPP_
 #define _UTILITIES_HPP_
 
-#include <random>
 #include <iostream>
 #include <vector>
 using std::ostream;

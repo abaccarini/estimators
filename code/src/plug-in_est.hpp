@@ -2,17 +2,18 @@
 #define _PLUG_IN_EST_HPP_
 
 #include "XoshiroCpp.hpp"
-#include <random>
+#include "pmfs.hpp"
 #include <cmath>
 #include <functional>
-#include <map>
-#include <stdexcept>
 #include <iostream>
+#include <map>
+#include <random>
+#include <stdexcept>
 
 #define EPSILON 0.0000000001
 
 // the type used for storing the actual entropy calculation
-using entType = long double; 
+using entType = long double;
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 class plug_in_est {
@@ -36,7 +37,6 @@ public:
 private:
     XoshiroCpp::Xoshiro256PlusPlus rng_xos;
     DIST_T<IN_T> dist;
-
 };
 
 // range_from and range_to are INCLUSIVE, so values are sampled over the domain [range_from, range_to]
@@ -59,13 +59,23 @@ std::map<IN_T, size_t> plug_in_est<IN_T, OUT_T, DIST_T>::generateSamples(const a
     return ptr;
 }
 
-
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 entType plug_in_est<IN_T, OUT_T, DIST_T>::calculateShannonEntropy(DIST_T<IN_T> dist) {
     try {
         if constexpr (std::is_same_v<DIST_T<IN_T>, std::uniform_int_distribution<IN_T>>)
             return entType(log2(dist.b() - dist.a() + 1));
-        else {
+        else if constexpr (std::is_same_v<DIST_T<IN_T>, std::poisson_distribution<IN_T>>) {
+            if  (dist.mean() > 10)
+                return entType(0.5 * log2(2.0 * M_PI * M_E * dist.mean())); // reasonable approximation 
+            else {
+                entType accum = 0.0;
+                for (int i = 0; i < 10*dist.mean(); i++)
+                {
+                    accum += poisson_pmf<entType>(i, dist.mean());
+                } 
+                return accum;
+            }
+        } else {
             throw std::runtime_error("unsupported distribution encountered, please add the distribution you want in an additional \"if\" block here.");
         }
     } catch (const std::exception &ex) {
@@ -74,11 +84,10 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::calculateShannonEntropy(DIST_T<IN_T> d
     }
 }
 
-
-/* 
+/*
 this is incompatible with functions that have an unknown support
 it assumes that num_samples is sufficiently large that when iterating through samples, you ultimately "touch" every element of the support of the random variable O
-what should be done is that you iterate through the entire (known) support, then check if an entry exists in the sample mapping 
+what should be done is that you iterate through the entire (known) support, then check if an entry exists in the sample mapping
 
  */
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
@@ -112,18 +121,8 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::estimate_H_cond(std::function<OUT_T(st
             ++input_data[x_T[0]];
         if (x_A.size() > 0) // if we have a known x_A to add to input_data
             ++input_data[x_A[0]];
-        // for (const auto &[num, count] : input_data)
-        // std::cout << num << " generated " << std::setw(4) << count << " times\n";
-        // std::cout << "result " << std::setw(4) << func(input_data, num_input_samples) << "\n";
         ++output_data[func(input_data, num_input_samples + x_T.size() + x_A.size())];
-
-        // output_data.insert({j, func(input_data, num_input_samples + x_T.size() + x_A.size())});
-
-
     }
-    // for (const auto &[num, count] : output_data)
-    // std::cout << num << " generated " << std::setw(4) << count << " times\n";
-
     return estimate_H(output_data, num_output_samples);
 }
 
@@ -139,20 +138,16 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT_T(s
 
     entType n = (entType)(range_to - range_from + 1);
     // entType H_T = calculateShannonEntropy(dist); // entropy of uniform RV
-    if(range_from > range_to)
+    if (range_from > range_to)
         throw std::runtime_error("range_from cannot be larger than range_to");
- 
+
     // this needs to be replaced with an input generator for num_T > 1
     for (IN_T i = range_from; i <= range_to; i++) {
         H_O_XT_xA += (1.0 / n) * estimate_H_cond(func, num_samples, num_S, {i}, x_A);
     }
     // both x_T and x_s must be randomly sampled, x_A is fixed
     H_O_xA = estimate_H_cond(func, num_samples, num_S + num_T, {}, x_A);
-    // std::cout << "H_T       : " << H_T << std::endl;
-    // std::cout << "H_O_XT_xA : " << H_O_XT_xA << std::endl;
-    // std::cout << "H_O_XT_xA : " << H_O_XT_xA << std::endl;
-
     return (target_init_entropy + H_O_XT_xA - H_O_xA);
 }
 
-#endif 
+#endif
