@@ -9,6 +9,8 @@ import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from matplotlib.lines import Line2D
+from labellines import labelLine, labelLines
 
 # logging.getLogger("matplotlib.font_manager").disabled = True
 
@@ -18,7 +20,7 @@ plt.rcParams.update(
         "text.usetex": True,
         # "font.family": "sans-serif",
         # "font.sans-serif": "Helvetica",
-        "text.latex.preamble": r"\usepackage{amsfonts,amsmath,amssymb,sfmath}",
+        "text.latex.preamble": r"\usepackage{amsfonts,amsmath,amssymb,sfmath,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
     }
 )
 
@@ -39,7 +41,7 @@ colors = [
 
 
 func_names = ["max", "min", "median", "median_min", "var", "var_nd", "var_mean"]
-distributions = ["uniform_int", "uniform_real", "normal", "lognormal"]
+distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
 data_dir = "../output/"
 fig_dir = "../figs/"
 
@@ -63,13 +65,36 @@ def function_str(fname):
         return r"$f_{\max}(\vec{x}) = \max_{i} x_i$"
     if fname == "min":
         return r"$f_{\min}(\vec{x}) = \min_{i} x_i$"
+    if fname == "median":
+        return r"$f_{\text{median}}(\vec{x}) = x_{\floor{(n +1)/2}}$"
     if fname == "var":
-        return r"$f_{\sigma}(\vec{x}) = \frac{1}{n-1}\sum_i (x_i - \mu)^2 $"
-
-    if fname == "var_nf":
-        return r"$f_{\sigmr}(\vec{x}) = \sum_i (x_i - \mu)^2 $"
+        return r"$f_{\sigma^2}(\vec{x}) = \frac{1}{n-1}\sum_i (x_i - \mu)^2 $"
+    if fname == "var_nd":
+        return r"$f_{\sigma^2}(\vec{x}) = \sum_i (x_i - \mu)^2 $"
     else:
         return ""
+
+
+def getBounds(dist, param_str):
+    if dist == "poisson":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        return (0, 3 * int(raw_str) + 1)
+    if dist == "uniform_int":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        bounds = raw_str.split(",")
+        return (int(bounds[0]), int(bounds[1]) + 1)
+
+
+
+def getParams(dist, param_str):
+    if dist == "poisson":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        return int(raw_str)
+    if dist == "uniform_int":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        bounds = raw_str.split(",")
+        return (int(bounds[0]), int(bounds[1]) )
+
 
 
 def plot_discrete(fname, dist, param_str):
@@ -79,10 +104,33 @@ def plot_discrete(fname, dist, param_str):
     files = os.listdir(path)
     print(files)
     file = [f for f in files if Path(f).stem == param_str][0]
-    print(file)
+    # print(file)
+    lower_bound, upper_bound = getBounds(dist, param_str)
 
     fig, ax = plt.subplots()
     plt.ylabel(r"Entropy (bits)")
+    plt.xlabel(r"Input  $x_A$")
+    
+    plt.grid()
+    plt.grid(which="minor", alpha=0.1)  # draw grid for minor ticks on x-axis
+    ax2 = ax.twiny()
+    ax2.spines["bottom"].set_position(("axes", -0.01))
+    ax2.xaxis.set_ticks_position("top")
+    ax2.spines["bottom"].set_visible(False)
+    
+    if dist == "poisson":
+        lam = getParams(dist, param_str)
+        ax2.axvline(lam, linestyle="--", alpha = 0.5, color='black')
+        ax2.set_xticks([lam])
+        ax2.set_xticklabels([r'$\lambda = %s$'%lam ], rotation=0, color='red')
+    if dist == "uniform_int":
+        a,b = getParams(dist, param_str)
+        n = float( a + b )/2.0
+        ax2.axvline(float( a + b )/2.0, linestyle="--", alpha = 0.5, color='black')
+        ax2.set_xticks([n])
+        ax2.set_xticklabels([r'$ \frac{a + b}{2}= %s$'%n ], rotation=0, color='red')
+
+    
 
     func_str = function_str(fname)
 
@@ -92,56 +140,80 @@ def plot_discrete(fname, dist, param_str):
     plot_lines = []
     cc = itertools.cycle(colors)
     alph = 0.5
-
-    for js in json_data["awae_data"][:4]:
+    
+    
+    # print("bounds : ", lower_bound, upper_bound)
+    for js in json_data["awae_data"][:5]:
         c = next(cc)
-        print(js[0], js[1])
         numSpec = js[0]
         awae_dict = js[1]
         x_A = np.array([np.array(xi) for xi in js[1]])[
             :, 0
         ]  # col slice, attacker inputs
         awae = np.array([np.array(xi) for xi in js[1]])[:, 1]  # col slice, awaes
+        label = r"$\lvert S\rvert\ = %s$" % numSpec
         (l2,) = plt.plot(
-            x_A,
-            awae,
+            x_A[lower_bound:upper_bound],
+            awae[lower_bound:upper_bound],
             marker="o",
             color=c,
             alpha=alph,
             linestyle="-",
-            label=r"$\lvert S\rvert\ = %s$" % numSpec,
+            label=label
         )
+
+
         plot_lines.append(l2)
-
-        print(x_A)
-        print(awae)
-        # for j in
-
-    legend1 = plt.legend(handles=plot_lines, loc="upper left", fontsize=14)
+    # labelLines(ax.get_lines(), zorder=4)
+    legend1 = plt.legend(handles=plot_lines,
+                         loc="best",
+                         bbox_to_anchor=(1.32, 0.7),
+                         fontsize=14
+                         )
     plt.gca().add_artist(legend1)
-    
-    
-    plt.xticks(np.arange(0, 8, 1), minor=True)  # set minor ticks on x-axis
-    plt.yticks(np.arange(0, 8, 1), minor=True)  # set minor ticks on y-axis
+
+    plt.xticks(
+        np.arange(lower_bound, upper_bound, 1), minor=True
+    )  # set minor ticks on x-axis
+    plt.yticks(
+        np.arange(lower_bound, upper_bound, 1), minor=True
+    )  # set minor ticks on y-axis
     plt.tick_params(which="minor", length=0)  # remove minor tick lines
 
+    target_init_label = r"$H(X_T)$"
     ax.hlines(
-        y=json_data["target_init_entropy"], xmin=0, xmax=7, linewidth=2, color="black"
+        y=json_data["target_init_entropy"],
+        xmin=lower_bound,
+        xmax=(upper_bound) - 1,
+        linewidth=2,
+        color="black",
+        label=target_init_label,
     )
-    plt.grid()
-    plt.grid(which="minor", alpha=0.1)  # draw grid for minor ticks on x-axis
 
-    # plt.text(2, 2, func_str)
+    hline_legened = [
+        Line2D(
+            [0],
+            [0],
+            color="black",
+            marker="",
+            alpha=1.0,
+            linestyle="-",
+            label=target_init_label,
+        )
+    ]
+    legend2 = plt.legend(handles=hline_legened, loc="upper right", bbox_to_anchor=(1.3, 1.0), fontsize=14)
+    plt.gca().add_artist(legend2)
 
     plt.text(
-        0.976,
-        0.03,
+        0.8,
+        -0.2,
         func_str,
         transform=ax.transAxes,
-        ha="right",
+        ha="left",
         va="bottom",
-        bbox={"facecolor": "white", "alpha": 0.9, "pad": 3,"edgecolor":'black'},
+        bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
     )
+    
 
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
@@ -156,6 +228,15 @@ def main():
     plot_discrete("max", "uniform_int", "(0,7)")
     plot_discrete("var", "uniform_int", "(0,7)")
     plot_discrete("var_nd", "uniform_int", "(0,7)")
+    plot_discrete("median", "uniform_int", "(0,7)")
+
+    plot_discrete("max", "poisson", "(4)")
+    plot_discrete("var_nd", "poisson", "(4)")
+    plot_discrete("median", "poisson", "(4)")
+    
+    plot_discrete("max", "poisson", "(8)")
+    plot_discrete("var_nd", "poisson", "(8)")
+    plot_discrete("median", "poisson", "(8)")
 
 
 if __name__ == "__main__":
