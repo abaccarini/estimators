@@ -91,8 +91,8 @@ void batch_exp_discrete_uniform(std::string exp_name) {
 }
 
 void batch_exp_poisson(std::string exp_name) {
-    const size_t numIterations = 500; // how many times we repeat computation to eliminate noise/random deviations
-    const size_t numSamples = 3000;   // number of items in estimator
+    const size_t numIterations = 5; // how many times we repeat computation to eliminate noise/random deviations
+    const size_t numSamples = 1000;   // number of items in estimator
     const size_t maxNumSpecs = 10;
     const size_t numTargets = 1;
     const size_t numAttackers = 1;
@@ -122,7 +122,6 @@ void batch_exp_poisson(std::string exp_name) {
                 numAttackers,
                 maxNumSpecs);
         } else if (exp_name == "min") {
-
             using out_type = long; // specific to the FUNCTION
             discrete_exp<in_type, out_type, std::poisson_distribution>(
                 exp_name,

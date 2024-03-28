@@ -5,13 +5,14 @@
 #include "pmfs.hpp"
 #include <cmath>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <random>
 #include <stdexcept>
 
-#define EPSILON 0.0000000001
-
+using std::cout;
+using std::endl;
 // the type used for storing the actual entropy calculation
 using entType = long double;
 
@@ -33,6 +34,7 @@ public:
     entType calculateShannonEntropy(DIST_T<IN_T> dist);
 
     entType target_init_entropy;
+    entType  evaluate_pmf(IN_T x);
 
 private:
     XoshiroCpp::Xoshiro256PlusPlus rng_xos;
@@ -43,6 +45,7 @@ private:
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 plug_in_est<IN_T, OUT_T, DIST_T>::plug_in_est(const std::uint64_t seed, DIST_T<IN_T> _dist) : rng_xos(seed), dist(_dist) {
     target_init_entropy = calculateShannonEntropy(dist); // only needs to be computed once (in constructor)
+    cout << "target_init : " << target_init_entropy << endl;
 }
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
@@ -65,15 +68,14 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::calculateShannonEntropy(DIST_T<IN_T> d
         if constexpr (std::is_same_v<DIST_T<IN_T>, std::uniform_int_distribution<IN_T>>)
             return entType(log2(dist.b() - dist.a() + 1));
         else if constexpr (std::is_same_v<DIST_T<IN_T>, std::poisson_distribution<IN_T>>) {
-            if  (dist.mean() > 10)
-                return entType(0.5 * log2(2.0 * M_PI * M_E * dist.mean())); // reasonable approximation 
+            if (dist.mean() > 10)
+                return entType(0.5 * log2(2.0 * M_PI * M_E * dist.mean())); // reasonable approximation
             else {
                 entType accum = 0.0;
-                for (int i = 0; i < 10*dist.mean(); i++)
-                {
-                    accum += poisson_pmf<entType>(i, dist.mean());
-                } 
-                return accum;
+                for (int i = 0; i < 10 * dist.mean(); i++) {
+                    accum += gFunc(poisson_pmf<entType>(i, dist.mean()));
+                }
+                return (-1.0) * accum;
             }
         } else {
             throw std::runtime_error("unsupported distribution encountered, please add the distribution you want in an additional \"if\" block here.");
@@ -136,18 +138,43 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT_T(s
     // auto range_from = dist.min(); // could be useful for finite discrete dists, but not infinite (e.g. poisson)
     // auto range_to = dist.max(); // could be useful for finite discrete dists
 
-    entType n = (entType)(range_to - range_from + 1);
+    // entType n = (entType)(range_to - range_from + 1);
     // entType H_T = calculateShannonEntropy(dist); // entropy of uniform RV
     if (range_from > range_to)
         throw std::runtime_error("range_from cannot be larger than range_to");
 
     // this needs to be replaced with an input generator for num_T > 1
     for (IN_T i = range_from; i <= range_to; i++) {
-        H_O_XT_xA += (1.0 / n) * estimate_H_cond(func, num_samples, num_S, {i}, x_A);
+        // H_O_XT_xA += (1.0 / n) * estimate_H_cond(func, num_samples, num_S, {i}, x_A); //   THE LEADING 1/N IS SPECIFIC TO THE UNIFORM DISTRIBUTION!!!!!
+        H_O_XT_xA += (evaluate_pmf(i)) * estimate_H_cond(func, num_samples, num_S, {i}, x_A); 
     }
+
     // both x_T and x_s must be randomly sampled, x_A is fixed
     H_O_xA = estimate_H_cond(func, num_samples, num_S + num_T, {}, x_A);
+    std::cout << std::setprecision(5);
+    // std::cout << "H(X_T) = " << target_init_entropy << "\t ";
+    // std::cout << "H(O | X_T, X_A = " <<x_A[0]<<") = "<< H_O_XT_xA<<"\t ";
+    // std::cout << "H(O | X_A = " <<x_A[0]<<") = "<<H_O_xA<<"\t ";
+    std::cout << std::setprecision(5);
+    // std::cout << "awae = " << target_init_entropy + H_O_XT_xA - H_O_xA << "\t ";
+    std::cout << std::setprecision(5);
+    // std::cout << "abs loss = " << target_init_entropy - (target_init_entropy + H_O_XT_xA - H_O_xA) << std::endl;
     return (target_init_entropy + H_O_XT_xA - H_O_xA);
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+entType plug_in_est<IN_T, OUT_T, DIST_T>::evaluate_pmf(IN_T x) {
+    try {
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::poisson_distribution<IN_T>>)
+            return poisson_pmf<entType>(x, dist.mean());
+
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::uniform_int_distribution<IN_T>>)
+            return 1.0 / (dist.b() - dist.a() + 1);
+
+        throw std::runtime_error("unsupported distribution encountered, please add the pmf of the distribution you want in pdms.hpp, as well as additional \"if\" block here.");
+    } catch (const std::exception &ex) {
+        std::cerr << "(evaluate_pmf): " << ex.what() << std::endl;
+    }
 }
 
 #endif

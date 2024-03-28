@@ -4,6 +4,7 @@
 #include "functions.hpp"
 #include "knn_est.hpp"
 #include "plug-in_est.hpp"
+#include "pmfs.hpp"
 #include "utilities.hpp"
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>

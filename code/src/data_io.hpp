@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -76,6 +77,13 @@ json getDistribution(DIST_T<IN_T> dist) {
                 {"a", dist.a()},
                 {"b", dist.b()},
                 {"param_str", "("+std::to_string(dist.a()) + "," + std::to_string(dist.b()) + ")"},
+
+            };
+        if constexpr (std::is_same_v<DIST_T<IN_T>, std::poisson_distribution<IN_T>>)
+            return json{
+                {"dist_name", "poisson"},
+                {"lam", dist.mean()},
+                {"param_str", "("+std::to_string(int(dist.mean()))+ ")"},
 
             };
         if constexpr (std::is_same_v<DIST_T<IN_T>, std::lognormal_distribution<IN_T>>)
