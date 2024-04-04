@@ -40,7 +40,7 @@ colors = [
 ]
 
 
-func_names = ["max", "min", "median", "median_min", "var", "var_nd", "var_mean"]
+func_names = ["max", "min", "median", "median_min", "var", "var_nd", "var_mu", "var_nd_mu"]
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
 data_dir = "../output/"
 fig_dir = "../figs/"
@@ -71,6 +71,10 @@ def function_str(fname):
         return r"$f_{\sigma^2}(\vec{x}) = \frac{1}{n-1}\sum_i (x_i - \mu)^2 $"
     if fname == "var_nd":
         return r"$f_{\sigma^2}(\vec{x}) = \sum_i (x_i - \mu)^2 $"
+    if fname == "var_nd_mu":
+        return r"$f_{(\sigma^2, \mu)}(\vec{x}) =  8\cdot \mu + \sum_i (x_i - \mu)^2 $"
+    if fname == "var_mu":
+        return r"$f_{(\sigma^2, \mu)}(\vec{x}) =  8\cdot \mu +\frac{1}{n-1}\sum_i (x_i - \mu)^2  $"
     else:
         return ""
 
@@ -142,29 +146,31 @@ def plot_discrete(fname, dist, param_str):
     alph = 0.5
     
     
+    oe_str = {0:'even', 1:'odd'}
+    oe_key = 0
     # print("bounds : ", lower_bound, upper_bound)
-    for js in json_data["awae_data"][:5]:
-        c = next(cc)
+    for js in json_data["awae_data"][:11]:
         numSpec = js[0]
-        awae_dict = js[1]
-        x_A = np.array([np.array(xi) for xi in js[1]])[
-            :, 0
-        ]  # col slice, attacker inputs
-        awae = np.array([np.array(xi) for xi in js[1]])[:, 1]  # col slice, awaes
-        label = r"$\lvert S\rvert\ = %s$" % numSpec
-        (l2,) = plt.plot(
-            x_A[lower_bound:upper_bound],
-            awae[lower_bound:upper_bound],
-            marker="o",
-            color=c,
-            alpha=alph,
-            linestyle="-",
-            label=label
-        )
+        if numSpec % 2 == oe_key:
+            c = next(cc)
+            awae_dict = js[1]
+            x_A = np.array([np.array(xi) for xi in js[1]])[
+                :, 0
+            ]  # col slice, attacker inputs
+            awae = np.array([np.array(xi) for xi in js[1]])[:, 1]  # col slice, awaes
+            label = r"$\lvert S\rvert\ = %s$" % numSpec
+            (l2,) = plt.plot(
+                x_A[lower_bound:upper_bound],
+                awae[lower_bound:upper_bound],
+                marker="o",
+                color=c,
+                alpha=alph,
+                linestyle="-",
+                label=label
+            )
+            plot_lines.append(l2)
 
 
-        plot_lines.append(l2)
-    # labelLines(ax.get_lines(), zorder=4)
     legend1 = plt.legend(handles=plot_lines,
                          loc="best",
                          bbox_to_anchor=(1.32, 0.7),
@@ -218,23 +224,30 @@ def plot_discrete(fname, dist, param_str):
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
     plt.savefig(
-        out_path + "/" + param_str + "_discrete_leakage.pdf",
+        out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
         bbox_inches="tight",
     )
     plt.close("all")
 
 
 def main():
-    plot_discrete("max", "uniform_int", "(0,7)")
+    # plot_discrete("max", "uniform_int", "(0,7)")
     plot_discrete("var", "uniform_int", "(0,7)")
     plot_discrete("var_nd", "uniform_int", "(0,7)")
     plot_discrete("median", "uniform_int", "(0,7)")
+    plot_discrete("median", "uniform_int", "(0,15)")
 
-    plot_discrete("max", "poisson", "(4)")
+
+    plot_discrete("var_mu", "uniform_int", "(0,3)")
+    plot_discrete("var_nd_mu", "uniform_int", "(0,3)")
+    plot_discrete("var_mu", "uniform_int", "(0,7)")
+    plot_discrete("var_nd_mu", "uniform_int", "(0,7)")
+
+    # plot_discrete("max", "poisson", "(4)")
     plot_discrete("var_nd", "poisson", "(4)")
     plot_discrete("median", "poisson", "(4)")
     
-    plot_discrete("max", "poisson", "(8)")
+    # plot_discrete("max", "poisson", "(8)")
     plot_discrete("var_nd", "poisson", "(8)")
     plot_discrete("median", "poisson", "(8)")
 

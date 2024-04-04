@@ -77,10 +77,13 @@ void testing_main() {
     // batch_exp_discrete_uniform("median");
     // batch_exp_discrete_uniform("var");
     // batch_exp_discrete_uniform("var_nd");
-    batch_exp_poisson("median");
-    batch_exp_poisson("max");
-    batch_exp_poisson("var_nd");
-    // test_knn_est();
+    // batch_exp_discrete_uniform("var_mu");
+    // batch_exp_discrete_uniform("var_nd_mu");
+    // batch_exp_poisson("median");
+    // batch_exp_poisson("max");
+    // batch_exp_poisson("var_nd");
+    test_knn_est();
+    batch_exp_normal("max");
     // rng_testing_main();
     // test_est();
     // test_gsl();
@@ -162,27 +165,31 @@ void test_knn_est() {
     const uint k = 1;
 
     // std::uniform_real_distribution<d_type> dist(0.0, 1.0);
+    // standard deviation is UNSQUARED
     std::normal_distribution<d_type> dist(0.0, 2.0);
     knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, compute_sum<d_type>, qty, numSpecs, numTargets, k);
     vector<d_type> x_A = {0.5};
     est.set_x_A(x_A);
+    std::cout << "Target_init_entropy : " << est.target_init_entropy<<std::endl;
+
+
     // cout<<est.generateSamples(numSpecs + numTargets,x_A[0])<<endl;
     // cout<<est.evaluate_pdf(0.5)<<endl;
-    size_t trials = 500;
-    long double res = 0.0;
-    long double error = 0.0;
-    long double actual = 0.5 * log2(2.0 * M_PI * M_E * 2.0 * 2.0);
-    for (size_t i = 0; i < trials; i++) {
-        auto val = est.estimate_h();
-        res += val;
-        error += (val - actual) * (val - actual);
-    }
-    res /= static_cast<long double>(trials);
-    error /= static_cast<long double>(trials);
-    cout << "estimated = " << res << endl;
-    cout << "actual    = " << actual << endl;
-    cout << "(?) MSE   = " << error << endl;
-    cout << datetime() << endl;
+    // size_t trials = 500;
+    // long double res = 0.0;
+    // long double error = 0.0;
+    // long double actual = 0.5 * log2(2.0 * M_PI * M_E * 2.0 * 2.0);
+    // for (size_t i = 0; i < trials; i++) {
+    //     auto val = est.estimate_h();
+    //     res += val;
+    //     error += (val - actual) * (val - actual);
+    // }
+    // res /= static_cast<long double>(trials);
+    // error /= static_cast<long double>(trials);
+    // cout << "estimated = " << res << endl;
+    // cout << "actual    = " << actual << endl;
+    // cout << "(?) MSE   = " << error << endl;
+    // cout << datetime() << endl;
 
     // est.get_func_type();
 

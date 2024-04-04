@@ -45,7 +45,7 @@ private:
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 plug_in_est<IN_T, OUT_T, DIST_T>::plug_in_est(const std::uint64_t seed, DIST_T<IN_T> _dist) : rng_xos(seed), dist(_dist) {
     target_init_entropy = calculateShannonEntropy(dist); // only needs to be computed once (in constructor)
-    cout << "target_init : " << target_init_entropy << endl;
+    // cout << "target_init : " << target_init_entropy << endl;
 }
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
@@ -151,13 +151,13 @@ entType plug_in_est<IN_T, OUT_T, DIST_T>::estimate_leakage(std::function<OUT_T(s
 
     // both x_T and x_s must be randomly sampled, x_A is fixed
     H_O_xA = estimate_H_cond(func, num_samples, num_S + num_T, {}, x_A);
-    std::cout << std::setprecision(5);
+    // std::cout << std::setprecision(5);
     // std::cout << "H(X_T) = " << target_init_entropy << "\t ";
     // std::cout << "H(O | X_T, X_A = " <<x_A[0]<<") = "<< H_O_XT_xA<<"\t ";
     // std::cout << "H(O | X_A = " <<x_A[0]<<") = "<<H_O_xA<<"\t ";
-    std::cout << std::setprecision(5);
+    // std::cout << std::setprecision(5);
     // std::cout << "awae = " << target_init_entropy + H_O_XT_xA - H_O_xA << "\t ";
-    std::cout << std::setprecision(5);
+    // std::cout << std::setprecision(5);
     // std::cout << "abs loss = " << target_init_entropy - (target_init_entropy + H_O_XT_xA - H_O_xA) << std::endl;
     return (target_init_entropy + H_O_XT_xA - H_O_xA);
 }

@@ -1,6 +1,7 @@
 #ifndef _FUNCTIONS_HPP_
 #define _FUNCTIONS_HPP_
 
+#include <algorithm>
 #include <cstddef>
 #include <map>
 #include <numeric>
@@ -77,6 +78,26 @@ U compute_var_nd(std::map<T, size_t> &map, const size_t &num_samples) {
     return total;
 }
 
+// computes the mean and variance and releases the sum 8*mu + var
+template <typename T, typename U>
+U compute_var_mu(std::map<T, size_t> &map, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(map, num_samples);
+    U total = 0;
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+    return total / static_cast<U>(num_samples - 1) + 8.0 * mu;
+}
+
+// same as above but with no division
+template <typename T, typename U>
+U compute_var_nd_mu(std::map<T, size_t> &map, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(map, num_samples);
+    U total = 0;
+    for (const auto &[num, count] : map)
+        total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
+    return total + 8.0 * mu;
+}
+
 template <typename T, typename U>
 std::pair<U, U> compute_var_mean(std::map<T, size_t> &map, const size_t &num_samples) {
     U mu = compute_mean<T, U>(map, num_samples);
@@ -113,17 +134,44 @@ T compute_min(std::map<T, size_t> &map, const size_t &num_samples) {
 // static_cast<T (*)(std::map<T, T> &, const size_t &)>(compute_max<T>)
 template <typename T>
 T compute_max(std::vector<T> &vec, const size_t &num_samples) {
-    return max(vec.begin(), vec.end());
+    return *std::max_element(vec.begin(), vec.end());
 }
 
 template <typename T>
 T compute_min(std::vector<T> &vec, const size_t &num_samples) {
-    return min(vec.begin(), vec.end());
+    return *std::min_element(vec.begin(), vec.end());
 }
 
 template <typename T>
 T compute_sum(std::vector<T> &vec, const size_t &num_samples) {
     return std::accumulate(vec.begin(), vec.end(), static_cast<T>(0));
+}
+
+template <typename T, typename U>
+U compute_mean(std::vector<T> &in_vec, const size_t &num_samples) {
+    U total = compute_sum(in_vec, num_samples);
+    return total / static_cast<U>(num_samples);
+}
+
+// computes the unbiased sample variance (Bessel's correction)
+// summation is divided by (num_samples - 1)
+template <typename T, typename U>
+U compute_var(std::vector<T> &in_vec, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(in_vec, num_samples);
+    U total = 0;
+    for (const auto &x : in_vec)
+        total += (static_cast<U>(x) - mu) * (static_cast<U>(x) - mu); // (x_i - mu)^2
+    return total / static_cast<U>(num_samples - 1);
+}
+
+// same as above, but with no division at the end
+template <typename T, typename U>
+U compute_var_nd(std::vector<T> &in_vec, const size_t &num_samples) {
+    U mu = compute_mean<T, U>(in_vec, num_samples);
+    U total = 0;
+    for (const auto &x : in_vec)
+        total += (static_cast<U>(x) - mu) * (static_cast<U>(x) - mu); // (x_i - mu)^2
+    return total;
 }
 
 #endif // _FUNCTIONS_HPP_

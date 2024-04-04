@@ -50,6 +50,7 @@ struct continuous_data {
     const size_t num_iterations;                             // how many times we repeat the computation to elimiate any random noise, and get closer to convergence upon the "true" entropy
     entType target_init_entropy;
     std::map<size_t, std::map<IN_T, entType>> awae_data; // see above
+    const uint k;
 };
 
 template <typename IN_T, template <typename> typename DIST_T>
@@ -109,7 +110,6 @@ void to_json(json &j, const discrete_data<IN_T, OUT_T, DIST_T> &p) {
     json dist_info = getDistribution<IN_T, DIST_T>(p.dist);
 
     j = json{
-        // {dist_info["dist_str"],
          {"name", p.name},
          {"dist", dist_info},
          {"num_samples", p.num_samples},
@@ -119,12 +119,51 @@ void to_json(json &j, const discrete_data<IN_T, OUT_T, DIST_T> &p) {
          {"target_init_entropy", p.target_init_entropy},
          {"awae_data", p.awae_data},
          {"timestamp", timestamp}
-        // }
         };
 }
 
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+void to_json(json &j, const continuous_data<IN_T, OUT_T, DIST_T> &p) {
+
+    json dist_info = getDistribution<IN_T, DIST_T>(p.dist);
+
+    j = json{
+         {"name", p.name},
+         {"dist", dist_info},
+         {"num_samples", p.num_samples},
+         {"num_T", p.num_T},
+         {"num_A", p.num_A},
+         {"num_iterations", p.num_iterations},
+         {"k", p.k},
+         {"target_init_entropy", p.target_init_entropy},
+         {"awae_data", p.awae_data},
+         {"timestamp", timestamp}
+        };
+}
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 void writeJSON_discrete(discrete_data<IN_T, OUT_T, DIST_T> data) {
+    static string extension = ".json";
+
+    json js;
+    to_json(js, data);
+
+    string dir_path = "../output/" + string(data.name) + "/" + string(js.at("dist").at("dist_name"))+"/";
+    std::system(("mkdir -p " + dir_path).c_str());
+    // std::cout << js.dump(1) << std::endl;
+
+    std::string fpath = dir_path + string(js.at("dist").at("param_str"))
+    // +":" + string(js.at("timestamp")) 
+    + extension;
+    std::cout << dir_path << std::endl;
+    std::cout << fpath << std::endl;
+
+    std::ofstream file(fpath);
+    file << std::setw(2) << js << std::endl;
+    file.flush();
+}
+
+template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
+void writeJSON_continuous(continuous_data<IN_T, OUT_T, DIST_T> data) {
     static string extension = ".json";
 
     json js;

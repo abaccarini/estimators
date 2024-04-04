@@ -27,4 +27,8 @@
     "C_Cpp.intelliSenseEngineFallback": "disabled",
     "python.analysis.typeCheckingMode": "basic",
     "cmake.sourceDirectory": "/home/alessandro/Dropbox/estimators/code",
+    "editor.tokenColorCustomizations": {
+        "comments": "",
+        "textMateRules": []
+    },
 }
