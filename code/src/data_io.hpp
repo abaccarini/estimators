@@ -44,7 +44,8 @@ template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 struct continuous_data {
     std::string name;
     DIST_T<IN_T> dist;
-    const size_t num_samples;
+    const size_t numOutputSamples;
+    const size_t numInputSamples;
     const size_t num_T;
     const size_t num_A;
     const size_t num_iterations;                             // how many times we repeat the computation to elimiate any random noise, and get closer to convergence upon the "true" entropy
@@ -130,7 +131,8 @@ void to_json(json &j, const continuous_data<IN_T, OUT_T, DIST_T> &p) {
     j = json{
          {"name", p.name},
          {"dist", dist_info},
-         {"num_samples", p.num_samples},
+         {"num_output_samples", p.numOutputSamples},
+         {"num_input_samples", p.numOutputSamples},
          {"num_T", p.num_T},
          {"num_A", p.num_A},
          {"num_iterations", p.num_iterations},

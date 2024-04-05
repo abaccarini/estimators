@@ -83,7 +83,7 @@ void testing_main() {
     // batch_exp_poisson("max");
     // batch_exp_poisson("var_nd");
     test_knn_est();
-    batch_exp_normal("max");
+    // batch_exp_normal("max");
     // rng_testing_main();
     // test_est();
     // test_gsl();
@@ -155,7 +155,8 @@ void test_est() {
 
 void test_knn_est() {
     const std::uint64_t seed = 12346;
-    const size_t qty = 3000;
+    const size_t numOutputSamples = 10;
+    const size_t numTargetSamples = 1;
 
     // NOTE the types used DO make a difference in speed (e.g. double v long double)
     typedef long double d_type;
@@ -167,13 +168,15 @@ void test_knn_est() {
     // std::uniform_real_distribution<d_type> dist(0.0, 1.0);
     // standard deviation is UNSQUARED
     std::normal_distribution<d_type> dist(0.0, 2.0);
-    knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, compute_sum<d_type>, qty, numSpecs, numTargets, k);
-    vector<d_type> x_A = {0.5};
-    est.set_x_A(x_A);
-    std::cout << "Target_init_entropy : " << est.target_init_entropy<<std::endl;
+    knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, static_cast<d_type (*)(std::vector<d_type> &, const size_t &)>(compute_max<d_type>), numOutputSamples, numTargetSamples, numSpecs, numTargets, k);
+    // knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, compute_sum<d_type>, qty, numTargetSamples, numSpecs, numTargets, k);
+    vector<d_type> x_A = {0.0};
+    est.x_A = x_A;
+    std::cout << "Target_init_entropy : " << est.target_init_entropy << std::endl;
 
-
-    // cout<<est.generateSamples(numSpecs + numTargets,x_A[0])<<endl;
+    cout<<est.estimate_leakage()<<endl;
+    // cout<<est.estimate_leakage()<<endl;
+    // cout<<est.estimate_leakage()<<endl;
     // cout<<est.evaluate_pdf(0.5)<<endl;
     // size_t trials = 500;
     // long double res = 0.0;
