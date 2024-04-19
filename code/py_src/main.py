@@ -125,7 +125,7 @@ def calculateTargetInitEntropy(dist_params):
     exit()
 
 
-def batch_experiment_uniform_int(fn: func):
+def batch_ex_uniform_int(fn: func):
     numIterations = 100
     maxNumSpecs = 11
     numT = 1
@@ -133,7 +133,7 @@ def batch_experiment_uniform_int(fn: func):
     N = 1000
     k = 1
     # N_vals = np.array([4])
-    N_vals = np.array([4,8,16])
+    N_vals = np.array([4, 8, 16])
     x_A_min = 0
     for n in N_vals:
         spec_to_xA_to_MI = {}
@@ -151,12 +151,20 @@ def batch_experiment_uniform_int(fn: func):
             # print(xA_to_MI)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
             # print(spec_to_xA_to_MI)
-            
+
         write_json(
-            numIterations, params, N, numT, numA, target_init_entropy, spec_to_xA_to_MI, fn
+            numIterations,
+            params,
+            N,
+            numT,
+            numA,
+            target_init_entropy,
+            spec_to_xA_to_MI,
+            fn,
         )
 
-def batch_experiment_poisson(fn: func):
+
+def batch_ex_poisson(fn: func):
     numIterations = 100
     maxNumSpecs = 11
     numT = 1
@@ -164,13 +172,13 @@ def batch_experiment_poisson(fn: func):
     N = 1000
     k = 1
     # N_vals = np.array([4])
-    lam_vals = np.array([4,8,16])
+    lam_vals = np.array([4, 8, 16])
     for lam in lam_vals:
         spec_to_xA_to_MI = {}
         params = poisson_params(lam)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         x_A_min = 0
-        x_A_max = lam*10
+        x_A_max = lam * 10
         for numSpecs in range(1, maxNumSpecs):
             xA_to_MI = {}
             for xA in range(x_A_min, x_A_max):
@@ -181,8 +189,100 @@ def batch_experiment_poisson(fn: func):
                 xA_to_MI[xA] = MI / float(numIterations)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
         write_json(
-            numIterations, params, N, numT, numA, target_init_entropy, spec_to_xA_to_MI, fn
+            numIterations,
+            params,
+            N,
+            numT,
+            numA,
+            target_init_entropy,
+            spec_to_xA_to_MI,
+            fn,
         )
+
+
+def batch_ex_normal(fn: func):
+    numIterations = 100
+    maxNumSpecs = 11
+    numT = 1
+    numA = 1
+    N = 1000
+    k = 1
+    # N_vals = np.array([4])
+    mu = 0.0
+    step_size = 0.1
+    sigma_vals = np.array([1.0, 2.0, 4.0])
+
+    for sigma in sigma_vals:
+        spec_to_xA_to_MI = {}
+        params = normal_params(mu, sigma)  # generates data from 0, 3-1
+        target_init_entropy = calculateTargetInitEntropy(params)
+        x_A_min = -4.0 * sigma
+        x_A_max = 4.0 * sigma
+
+        x_A_range = np.linspace(x_A_min, x_A_max, num=(x_A_max - x_A_min) / step_size)
+
+        for numSpecs in range(1, maxNumSpecs):
+            xA_to_MI = {}
+            for xA in x_A_range:
+                MI = 0.0
+                for i in range(numIterations):
+                    s = sampleData(params, N, numT, numSpecs, [xA], fn)
+                    MI += Mixed_KSG(s.x_T, s.O, k)
+                xA_to_MI[xA] = MI / float(numIterations)
+            spec_to_xA_to_MI[numSpecs] = xA_to_MI
+        write_json(
+            numIterations,
+            params,
+            N,
+            numT,
+            numA,
+            target_init_entropy,
+            spec_to_xA_to_MI,
+            fn,
+        )
+
+
+def batch_ex_lognormal(fn: func):
+    numIterations = 100
+    maxNumSpecs = 11
+    numT = 1
+    numA = 1
+    N = 1000
+    k = 1
+    # N_vals = np.array([4])
+    mu = 0.0
+    step_size = 0.1
+    sigma_vals = np.array([1.0, 2.0, 4.0])
+
+    for sigma in sigma_vals:
+        spec_to_xA_to_MI = {}
+        params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
+        target_init_entropy = calculateTargetInitEntropy(params)
+        x_A_min = 0
+        x_A_max = 4.0 * sigma
+
+        x_A_range = np.linspace(x_A_min, x_A_max, num=(x_A_max - x_A_min) / step_size)
+
+        for numSpecs in range(1, maxNumSpecs):
+            xA_to_MI = {}
+            for xA in x_A_range:
+                MI = 0.0
+                for i in range(numIterations):
+                    s = sampleData(params, N, numT, numSpecs, [xA], fn)
+                    MI += Mixed_KSG(s.x_T, s.O, k)
+                xA_to_MI[xA] = MI / float(numIterations)
+            spec_to_xA_to_MI[numSpecs] = xA_to_MI
+        write_json(
+            numIterations,
+            params,
+            N,
+            numT,
+            numA,
+            target_init_entropy,
+            spec_to_xA_to_MI,
+            fn,
+        )
+
 
 def main():
 
@@ -195,7 +295,10 @@ def main():
 
     # fn = func(np.sum, "sum")
     fn = func(np.max, "max")
-    batch_experiment_uniform_int(fn)
+    batch_ex_uniform_int(fn)
+    batch_ex_normal(fn)
+    batch_ex_lognormal(fn)
+    batch_ex_poisson(fn)
 
     # s = sampleData(params, 10, 1, 1, [1], np.sum)
 
