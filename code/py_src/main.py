@@ -13,7 +13,7 @@ np.random.seed(0)
 
 
 class sampleData:
-    def __init__(self, params, N, numT, numS, x_A, fn):
+    def __init__(self, params, N, numT, numS, x_A, thefunc):
         self.params = params  # the distribution params
         self.N = N
         self.x_A = (
@@ -21,7 +21,7 @@ class sampleData:
         )
         self.x_T = np.asarray(self.sample(numT))
         self.x_S = np.asarray(self.sample(numS))
-        self.fn = fn
+        self.thefunc = thefunc
         self.O = self.produceOutputs()
 
     def sample(self, numP):
@@ -55,7 +55,7 @@ class sampleData:
     def produceOutputs(self):
         return np.asarray(
             [
-                (self.fn(np.concatenate((xts, self.x_A))))
+                (self.thefunc.fn(np.concatenate((xts, self.x_A))))
                 for (xts) in np.column_stack((self.x_T, self.x_S))
             ]
         )
@@ -67,7 +67,6 @@ class sampleData:
 
 
 class func:
-
     def __init__(self, fn, fn_name):
         self.fn = fn
         self.fn_name = fn_name
@@ -87,14 +86,15 @@ def write_json(
         "target_init_entropy": target_init_entropy,
         "awae_data": MI_data,
     }
-
-    dir_path = "../output/" + str(fn.fn_name) + "/" + str(params.t) + "/"
+    # print(data)
+    dir_path = "../output_py/" + str(fn.fn_name) + "/" + str(params.t) + "/"
 
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     pstr = params.getJSON()["param_str"]
+    # print(params.getJSON())
     fname = dir_path + pstr + ".json"
     with open(fname, "w") as json_file:
-        json.dump(data, json_file)
+        json.dump(data, json_file, default=int, indent=2)
 
 
 def calculateTargetInitEntropy(dist_params):
@@ -102,7 +102,7 @@ def calculateTargetInitEntropy(dist_params):
         return np.log2(float(dist_params.b) - float(dist_params.a - 1))
 
     if isinstance(dist_params, uniform_int_params):
-        return np.log2(float(dist_params.b) - float(dist_params.a - 1) + 1.0)
+        return np.log2(float(dist_params.b) - float(dist_params.a))
 
     if isinstance(dist_params, normal_params):
         return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.sigma)
@@ -126,17 +126,18 @@ def calculateTargetInitEntropy(dist_params):
 
 
 def batch_experiment_uniform_int(fn: func):
-    numIterations = 10
-    maxNumSpecs = 10
+    numIterations = 100
+    maxNumSpecs = 11
     numT = 1
     numA = 1
-    N = 30
-    k = 5
-    N_vals = np.array([4, 8, 16])
+    N = 1000
+    k = 1
+    # N_vals = np.array([4])
+    N_vals = np.array([4,8,16])
     x_A_min = 0
     for n in N_vals:
         spec_to_xA_to_MI = {}
-        params = uniform_real_params(0, n)  # generates data from 0, 3-1
+        params = uniform_int_params(0, n)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         x_A_max = n
         for numSpecs in range(1, maxNumSpecs):
@@ -147,26 +148,58 @@ def batch_experiment_uniform_int(fn: func):
                     s = sampleData(params, N, numT, numSpecs, [xA], fn)
                     MI += Mixed_KSG(s.x_T, s.O, k)
                 xA_to_MI[xA] = MI / float(numIterations)
-            xA_to_MI[numSpecs] = xA_to_MI
+            # print(xA_to_MI)
+            spec_to_xA_to_MI[numSpecs] = xA_to_MI
+            # print(spec_to_xA_to_MI)
+            
         write_json(
-            numIterations, params, N, numT, numA, target_init_entropy, xA_to_MI, fn
+            numIterations, params, N, numT, numA, target_init_entropy, spec_to_xA_to_MI, fn
         )
-    # return
 
+def batch_experiment_poisson(fn: func):
+    numIterations = 100
+    maxNumSpecs = 11
+    numT = 1
+    numA = 1
+    N = 1000
+    k = 1
+    # N_vals = np.array([4])
+    lam_vals = np.array([4,8,16])
+    for lam in lam_vals:
+        spec_to_xA_to_MI = {}
+        params = poisson_params(lam)  # generates data from 0, 3-1
+        target_init_entropy = calculateTargetInitEntropy(params)
+        x_A_min = 0
+        x_A_max = lam*10
+        for numSpecs in range(1, maxNumSpecs):
+            xA_to_MI = {}
+            for xA in range(x_A_min, x_A_max):
+                MI = 0.0
+                for i in range(numIterations):
+                    s = sampleData(params, N, numT, numSpecs, [xA], fn)
+                    MI += Mixed_KSG(s.x_T, s.O, k)
+                xA_to_MI[xA] = MI / float(numIterations)
+            spec_to_xA_to_MI[numSpecs] = xA_to_MI
+        write_json(
+            numIterations, params, N, numT, numA, target_init_entropy, spec_to_xA_to_MI, fn
+        )
 
 def main():
 
-    params = uniform_real_params(0, 3)  # generates data from 0, 3-1
-    print("target init entropy : ", calculateTargetInitEntropy(params))
+    # params = uniform_int_params(0, 4)  # generates data from 0, 3-1
+    # print("target init entropy : ", calculateTargetInitEntropy(params))
 
-    def fn(x):
-        # return np.asarray([sum(x), sum(x)])
-        return np.asarray([sum(x)])
+    # def fn(x):
+    #     # return np.asarray([sum(x), sum(x)])
+    #     return np.asarray([sum(x)])
 
-    s = sampleData(params, 10, 1, 1, [1], np.sum)
-    
+    # fn = func(np.sum, "sum")
+    fn = func(np.max, "max")
+    batch_experiment_uniform_int(fn)
+
+    # s = sampleData(params, 10, 1, 1, [1], np.sum)
+
     # print("Mixed KSG: I(X:Y) = ", Mixed_KSG(s.x_T, s.O, k=5))
-    return
 
 
 if __name__ == "__main__":

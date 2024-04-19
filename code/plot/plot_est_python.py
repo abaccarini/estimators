@@ -43,7 +43,7 @@ colors = [
 func_names = ["max", "min", "median", "median_min", "var", "var_nd", "var_mu", "var_nd_mu"]
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
 data_dir = "../output/"
-fig_dir = "../figs/"
+fig_dir = "../figs_py/"
 
 
 def verify_args(fname, dist):
@@ -86,7 +86,7 @@ def getBounds(dist, param_str):
     if dist == "uniform_int":
         raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
         bounds = raw_str.split(",")
-        return (int(bounds[0]), int(bounds[1]) + 1)
+        return (int(bounds[0]), int(bounds[1]))
 
 
 
@@ -111,8 +111,6 @@ def plot_discrete(fname, dist, param_str):
     # print(file)
     lower_bound, upper_bound = getBounds(dist, param_str)
     max_numspec = 6
-
-
     fig, ax = plt.subplots()
     plt.ylabel(r"Entropy (bits)")
     plt.xlabel(r"Input  $x_A$")
@@ -131,8 +129,9 @@ def plot_discrete(fname, dist, param_str):
         ax2.set_xticklabels([r'$\lambda = %s$'%lam ], rotation=0, color='red')
     if dist == "uniform_int":
         a,b = getParams(dist, param_str)
-        n = float( a + b )/2.0
-        ax2.axvline(float( a + b )/2.0, linestyle="--", alpha = 0.5, color='black')
+        print(a,b)
+        n = float( a + b-1 )/2.0
+        ax2.axvline(float( a + b -1)/2.0, linestyle="--", alpha = 0.5, color='black')
         ax2.set_xticks([n])
         ax2.set_xticklabels([r'$ \frac{a + b}{2}= %s$'%n ], rotation=0, color='red')
 
@@ -148,19 +147,22 @@ def plot_discrete(fname, dist, param_str):
     alph = 0.5
     
     
-    # oe_str = {0:'even', 1:'odd'}
-    # oe_key = 0
+    oe_str = {0:'even', 1:'odd'}
+    oe_key = 0
+    t_init = json_data["target_init_entropy"]
     # print("bounds : ", lower_bound, upper_bound)
-    for js in json_data["awae_data"][:11]:
-        numSpec = js[0]
+    print(json_data["awae_data"])
+    # return
+    for numSpec,val in json_data["awae_data"].items():
         if int(numSpec) < max_numspec:
-        # if numSpec % 2 == oe_key:
+            # if numSpec % 2 == oe_key:
+
             c = next(cc)
-            awae_dict = js[1]
-            x_A = np.array([np.array(xi) for xi in js[1]])[
-                :, 0
-            ]  # col slice, attacker inputs
-            awae = np.array([np.array(xi) for xi in js[1]])[:, 1]  # col slice, awaes
+            # for jj, vv in val.items():
+            #     print(jj, vv)
+            x_A = np.array([np.array(xi) for xi,vv in val.items()])
+            awae = np.array([t_init - np.array(vv) for xi,vv in val.items()])
+            # awae = np.array([np.array(xi) for xi in val])[:, 1]  # col slice, awaes
             label = r"$\lvert S\rvert\ = %s$" % numSpec
             (l2,) = plt.plot(
                 x_A[lower_bound:upper_bound],
@@ -227,14 +229,15 @@ def plot_discrete(fname, dist, param_str):
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
     plt.savefig(
-        out_path + "/" + param_str +"_discrete_leakage.pdf",
+        # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
+        out_path + "/" + param_str + "_discrete_leakage.pdf",
         bbox_inches="tight",
     )
     plt.close("all")
 
 
 def main():
-    plot_discrete("max", "uniform_int", "(0,3)")
+    plot_discrete("max", "uniform_int", "(0,4)")
     # plot_discrete("var", "uniform_int", "(0,7)")
     # plot_discrete("var_nd", "uniform_int", "(0,7)")
     # plot_discrete("median", "uniform_int", "(0,7)")

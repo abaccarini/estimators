@@ -5,12 +5,9 @@ class uniform_int_params:
         self.b = b
 
     def getJSON(self):
-        return {
-            "dist_name": self.t,
-            "a": self.a,
-            "b": self.b,
-            "param_str": "(" + str(self.a) + "," + str(self.a) + ")",
-        }
+        tmp = "(" + str(self.a) + "," + str(self.b) + ")"
+
+        return {"dist_name": self.t, "a": self.a, "b": self.b, "param_str": tmp}
 
 
 class poisson_params:
