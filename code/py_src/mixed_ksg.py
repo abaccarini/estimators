@@ -1,6 +1,6 @@
 import scipy.spatial as ss
 from scipy.special import digamma
-from math import log
+from math import log, log2, e
 import numpy as np
 
 """
@@ -47,4 +47,4 @@ def Mixed_KSG(x, y, k=5):
             nx = len(tree_x.query_ball_point(x[i], knn_dis[i] - 1e-15, p=float("inf")))  # type: ignore
             ny = len(tree_y.query_ball_point(y[i], knn_dis[i] - 1e-15, p=float("inf")))  # type: ignore
         ans += (digamma(kp) + log(N) - digamma(nx) - digamma(ny)) / N
-    return ans
+    return ans * log2(e) # used to convert from nats to bits

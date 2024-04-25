@@ -170,7 +170,7 @@ void test_knn_est() {
     std::normal_distribution<d_type> dist(0.0, 2.0);
     knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, static_cast<d_type (*)(std::vector<d_type> &, const size_t &)>(compute_max<d_type>), numOutputSamples, numTargetSamples, numSpecs, numTargets, k);
     // knn_est<d_type, d_type, std::normal_distribution> est(seed, dist, compute_sum<d_type>, qty, numTargetSamples, numSpecs, numTargets, k);
-    vector<d_type> x_A = {0.0};
+    vector<d_type> x_A = {0.1};
     est.x_A = x_A;
     std::cout << "Target_init_entropy : " << est.target_init_entropy << std::endl;
 

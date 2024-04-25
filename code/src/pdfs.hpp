@@ -17,7 +17,7 @@ T lognormal_pdf(T x, T mu, T sigma) {
     T a = (log(x) - mu) / sigma;
     return inv_sqrt_2pi / (x * sigma) * std::exp(-T(0.5) * a * a);
 }
-
+// 
 // if a <= x <= b, then return 1/(b-a), 0 otherwise
 template <typename T>
 T uniform_real_pdf(T x, T a, T b) {

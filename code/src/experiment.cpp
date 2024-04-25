@@ -209,9 +209,9 @@ void batch_exp_poisson(std::string exp_name) {
 }
 
 void batch_exp_normal(std::string exp_name) {
-    const size_t numIterations = 5;     // how many times we repeat computation to eliminate noise/random deviations
+    const size_t numIterations = 5;      // how many times we repeat computation to eliminate noise/random deviations
     const size_t numOutputSamples = 100; // number of items in estimator
-    
+
     const size_t numInputSamples = 100; // how many target samples we generate when estimating the middle term
     const size_t maxNumSpecs = 10;
     const size_t numTargets = 1;

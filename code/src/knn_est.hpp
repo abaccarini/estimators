@@ -2,7 +2,7 @@
 
 #include "XoshiroCpp.hpp"
 #include "pdfs.hpp"
-#include "utilities.hpp"
+   #include "utilities.hpp"
 #include <algorithm>
 #include <boost/math/special_functions/digamma.hpp>
 #include <ctgmath>
@@ -319,19 +319,28 @@ entType knn_est<IN_T, OUT_T, DIST_T>::estimate_h(vector<OUT_T> &samples) {
 
     entType result = 0.0;
     static const entType c_d_p = 2.0; // d = 1, p is always 2 for 1D euclidean distance (equiv to manhattan )
+    entType val = 0.0;
     for (size_t i = 0; i < num_output_samples; i++) {
-        result += log((static_cast<entType>(num_output_samples) * c_d_p * samples[i]) / static_cast<entType>(k)); // no difference between these two versions (exact same)
+        val = (static_cast<entType>(num_output_samples) * c_d_p * samples[i]) / static_cast<entType>(k);
+        std::cout << "log (" << val << ")" << std::endl;
+        result += log(val); // no difference between these two versions (exact same)
         // result += log(static_cast<entType>(num_samples)) + log(c_d_p) + log(distances[i] )-  log(static_cast<entType>(k)); // no difference between these two versions (exact same)
     }
-    
-    std::cout << "summation : " << result<<std::endl;
 
+    std::cout << "summation : " << result << std::endl;
 
-    entType res =  ((1.0 / static_cast<entType>(num_output_samples)) * result + log(static_cast<entType>(k)) - boost::math::digamma(static_cast<entType>(k))) * log2(M_E); // need to convert from nats to bits
-    std::cout << "res : " << res<<std::endl;
-    return res; 
+    entType res = ((1.0 / static_cast<entType>(num_output_samples)) * result + log(static_cast<entType>(k)) - boost::math::digamma(static_cast<entType>(k))) * log2(M_E); // need to convert from nats to bits
+    std::cout << "res : " << res << std::endl;
+    return res;
 }
 
+/*
+PROBLEM HERE
+IF WE DON'T HAVE ENOUGH PARTICIPANTS, WE MAY END UP TAKING THE LOG OF 0
+SOLUTION 1: DEFINE LOG(0) AS 0
+SOLUTION 2: REMOVE DUPLICATE SAMPLES (WHICH IS WHAT CAUSES THE LOG(0))
+
+*/
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>
 entType knn_est<IN_T, OUT_T, DIST_T>::estimate_h_cond(std::vector<IN_T> x_T) {
     std::vector<IN_T> input_data(numS + numT + x_A.size());
@@ -345,11 +354,11 @@ entType knn_est<IN_T, OUT_T, DIST_T>::estimate_h_cond(std::vector<IN_T> x_T) {
         generateSamples(input_data, num_input_samples); // this is properly generated
         input_data[num_input_samples] = x_T[0];
         input_data[num_input_samples + 1] = x_A[0];
-        cout<<"(S sampled) input data : " << input_data<<" ==> O = ";
+        cout << "(S sampled) input data : " << input_data << " ==> O = ";
         output_data[i] = func(input_data, input_data.size());
-        cout<<output_data[i]<<endl;
+        cout << output_data[i] << endl;
     }
-    cout<<"(S sampled) output samples : "<< output_data<<endl;
+    cout << "(S sampled) output samples : " << output_data << endl;
     return estimate_h(output_data);
 }
 
@@ -362,11 +371,11 @@ entType knn_est<IN_T, OUT_T, DIST_T>::estimate_h_cond() {
     for (size_t i = 0; i < num_output_samples; i++) {
         generateSamples(input_data, num_input_samples); // this is properly generated
         input_data[num_input_samples] = x_A[0];
-        cout<<"(S,T inputs sampled) input data : " << input_data<<" ==> O = ";
+        cout << "(S,T inputs sampled) input data : " << input_data << " ==> O = ";
         output_data[i] = func(input_data, input_data.size());
-        cout<< output_data[i]<<endl;
+        cout << output_data[i] << endl;
     }
-    cout<<"(S,T inputs sampled) output samples : "<< output_data<<endl;
+    cout << "(S,T inputs sampled) output samples : " << output_data << endl;
     return estimate_h(output_data);
 }
 template <typename IN_T, typename OUT_T, template <typename> typename DIST_T>

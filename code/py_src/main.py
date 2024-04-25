@@ -11,6 +11,13 @@ from dist_params import *
 
 np.random.seed(0)
 
+numIterations = 10
+maxNumSpecs = 11
+numT = 1
+numA = 1
+N = 1000
+k = 1
+
 
 class sampleData:
     def __init__(self, params, N, numT, numS, x_A, thefunc):
@@ -111,10 +118,11 @@ def calculateTargetInitEntropy(dist_params):
         if dist_params.lam > 10:
             return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.lam)
         else:
-            res = 0.0
+            accum = 0.0
             for i in range(0, 10 * dist_params.lam):
                 tmp = poisson.pmf(i, dist_params.lam)
                 accum += xlogy(tmp, tmp)
+            return (-1.0)*accum
 
     if isinstance(dist_params, lognormal_params):
         return (
@@ -126,12 +134,7 @@ def calculateTargetInitEntropy(dist_params):
 
 
 def batch_ex_uniform_int(fn: func):
-    numIterations = 100
-    maxNumSpecs = 11
-    numT = 1
-    numA = 1
-    N = 1000
-    k = 1
+
     # N_vals = np.array([4])
     N_vals = np.array([4, 8, 16])
     x_A_min = 0
@@ -165,14 +168,9 @@ def batch_ex_uniform_int(fn: func):
 
 
 def batch_ex_poisson(fn: func):
-    numIterations = 100
-    maxNumSpecs = 11
-    numT = 1
-    numA = 1
-    N = 1000
-    k = 1
+
     # N_vals = np.array([4])
-    lam_vals = np.array([4, 8, 16])
+    lam_vals = np.array([2, 4, 8])
     for lam in lam_vals:
         spec_to_xA_to_MI = {}
         params = poisson_params(lam)  # generates data from 0, 3-1
@@ -201,12 +199,7 @@ def batch_ex_poisson(fn: func):
 
 
 def batch_ex_normal(fn: func):
-    numIterations = 100
-    maxNumSpecs = 11
-    numT = 1
-    numA = 1
-    N = 1000
-    k = 1
+    
     # N_vals = np.array([4])
     mu = 0.0
     step_size = 0.1
@@ -219,7 +212,10 @@ def batch_ex_normal(fn: func):
         x_A_min = -4.0 * sigma
         x_A_max = 4.0 * sigma
 
-        x_A_range = np.linspace(x_A_min, x_A_max, num=(x_A_max - x_A_min) / step_size)
+        x_A_range = np.linspace(
+            # x_A_min, x_A_max, num=int((x_A_max - x_A_min) / step_size)
+            x_A_min, x_A_max, num=50
+        )
 
         for numSpecs in range(1, maxNumSpecs):
             xA_to_MI = {}
@@ -243,12 +239,7 @@ def batch_ex_normal(fn: func):
 
 
 def batch_ex_lognormal(fn: func):
-    numIterations = 100
-    maxNumSpecs = 11
-    numT = 1
-    numA = 1
-    N = 1000
-    k = 1
+
     # N_vals = np.array([4])
     mu = 0.0
     step_size = 0.1
@@ -261,7 +252,9 @@ def batch_ex_lognormal(fn: func):
         x_A_min = 0
         x_A_max = 4.0 * sigma
 
-        x_A_range = np.linspace(x_A_min, x_A_max, num=(x_A_max - x_A_min) / step_size)
+        x_A_range = np.linspace(
+            x_A_min, x_A_max, num=50
+        )
 
         for numSpecs in range(1, maxNumSpecs):
             xA_to_MI = {}
@@ -296,13 +289,30 @@ def main():
     # fn = func(np.sum, "sum")
     fn = func(np.max, "max")
     batch_ex_uniform_int(fn)
-    batch_ex_normal(fn)
-    batch_ex_lognormal(fn)
-    batch_ex_poisson(fn)
+    # batch_ex_lognormal(fn)
+    # batch_ex_normal(fn)
+    # batch_ex_poisson(fn)
 
-    # s = sampleData(params, 10, 1, 1, [1], np.sum)
+    fn = func(np.var, "var")
+    # batch_ex_uniform_int(fn)
+    # batch_ex_lognormal(fn)
+    # # batch_ex_normal(fn)
+    # batch_ex_poisson(fn)
 
-    # print("Mixed KSG: I(X:Y) = ", Mixed_KSG(s.x_T, s.O, k=5))
+    # fn = func(np.median, "median")
+    # batch_ex_uniform_int(fn)
+    # batch_ex_lognormal(fn)
+    # batch_ex_normal(fn)
+    # batch_ex_poisson(fn)
+
+    # def var_mu(x):
+    #     return np.asarray([np.var(x), np.mean(x)])
+
+    # fn = func(var_mu, "var_mu")
+    # batch_ex_uniform_int(fn)
+    # batch_ex_lognormal(fn)
+    # batch_ex_normal(fn)
+    # batch_ex_poisson(fn)
 
 
 if __name__ == "__main__":
