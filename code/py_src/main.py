@@ -3,22 +3,21 @@ from scipy.special import xlogy
 from scipy.stats import poisson
 import sys
 import json
-import os
 import time
 import numpy as np
 from mixed_ksg import Mixed_KSG
 from dist_params import *
 from datetime import datetime
-from multiprocessing import Pool, freeze_support, cpu_count
+from multiprocessing import Pool, cpu_count
 
 output_path = "../output_k1/"
 np.random.seed(0)
 
-numIterations = 10
+numIterations = 100
 maxNumSpecs = 11
 numT = 1
 numA = 1
-N = 3000
+N = 5000
 k = 1
 
 # used for conitnuous input distributions
@@ -214,7 +213,7 @@ def batch_ex_poisson(fn: func):
         x_A_range = range(x_A_min, x_A_max)
 
         for numSpecs in range(1, maxNumSpecs):
-            print("poission", fn.fn_name, lam, numSpecs)
+            print("poission", fn.fn_name, lam, numSpecs) # just used to track the status of experiments
             pool = Pool(int(cpu_count() / 2))
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
@@ -286,7 +285,7 @@ def batch_ex_lognormal(fn: func):
     p_str_list = []
 
     x_A_min = 0.00001
-    for (sigma, mu) in zip(sigma_vals, mu_vals):
+    for sigma, mu in zip(sigma_vals, mu_vals):
         spec_to_xA_to_MI = {}
         params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
@@ -324,8 +323,6 @@ def batch_ex_lognormal(fn: func):
 
 def main():
     pass
-    # params = uniform_int_params(0, 4)  # generates data from 0, 3-1
-    # print("target init entropy : ", calculateTargetInitEntropy(params))
 
 
 def normal_exp():
@@ -357,27 +354,25 @@ def poisson_exp():
 
 
 def update_p_str_json():
-    json_fname = output_path + 'p_strs.json'
-    
+    json_fname = output_path + "p_strs.json"
+
     my_file = Path(json_fname)
-    if not my_file.is_file(): # the file does not exist, so just create and dump
+    if not my_file.is_file():  # the file does not exist, so just create and dump
         with open(json_fname, "w") as json_file:
             json.dump(param_str_dict, json_file, default=int, indent=2)
-    else: 
+    else:
         # we need to open the existing version and compare with what was generated in this execution
-        fname =  open(json_fname)
+        fname = open(json_fname)
         old = json.load(fname)
         print(old)
         print(param_str_dict)
         for key, value in param_str_dict.items():
-            if (key not in old) or (sorted(value) != sorted( old[key] )):
-                print("hi")
+            if (key not in old) or (sorted(value) != sorted(old[key])):
                 old[key] = value
 
         with open(json_fname, "w") as json_file:
             json.dump(old, json_file, default=int, indent=2)
-            
-        
+
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
@@ -406,7 +401,6 @@ if __name__ == "__main__":
                 exit(1)
         update_p_str_json()
 
-        # main()
         print(
             "finished computation at %s\nelapsed time: %s seconds "
             % (time.ctime(), time.time() - start_time)

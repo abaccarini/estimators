@@ -349,15 +349,15 @@ def main():
     param_strs_dict = json.load(fname)
 
     disc_dists = [
-         "uniform_int",
-         "poisson",
+        "uniform_int",
+        "poisson",
     ]
-    
+
     cont_dists = [
-         "normal",
-         "lognormal",
+        "normal",
+        "lognormal",
     ]
-    
+
     for dname in cont_dists:
         for func in func_names:
             for p_str in param_strs_dict[dname]:
@@ -367,6 +367,7 @@ def main():
         for func in func_names:
             for p_str in param_strs_dict[dname]:
                 plot_discrete(func, dname, p_str)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
