@@ -1,25 +1,18 @@
 import json
 import numpy as np
-import logging
 import os
-import re
-import subprocess
 import sys
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from matplotlib.lines import Line2D
-from labellines import labelLine, labelLines
 
-# logging.getLogger("matplotlib.font_manager").disabled = True
 
 plt.rcParams.update(
     {
         "font.size": 18,
         "text.usetex": True,
-        # "font.family": "sans-serif",
-        # "font.sans-serif": "Helvetica",
         "text.latex.preamble": r"\usepackage{amsfonts,amsmath,amssymb,sfmath,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
     }
 )
@@ -39,17 +32,13 @@ colors = [
     "darkorange",
 ]
 
-
 func_names = [
     "max",
-    "min",
-    "median",
-    "median_min",
-    "var",
-    "var_nd",
     "var_mu",
-    "var_nd_mu",
+    "median",
+    "var",
 ]
+
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
 data_dir = "../output_k1/"
 fig_dir = "../figs_py/"
@@ -77,13 +66,13 @@ def function_str(fname):
     if fname == "median":
         return r"$f_{\text{median}}(\vec{x}) = x_{\floor{(n +1)/2}}$"
     if fname == "var":
-        return r"$f_{\sigma^2}(\vec{x}) = \frac{1}{n-1}\sum_i (x_i - \mu)^2 $"
+        return r"$f_{\sigma^2}(\vec{x}) = \frac{1}{n}\sum_i (x_i - \mu)^2 $"
     if fname == "var_nd":
         return r"$f_{\sigma^2}(\vec{x}) = \sum_i (x_i - \mu)^2 $"
     if fname == "var_nd_mu":
-        return r"$f_{(\sigma^2, \mu)}(\vec{x}) =  8\cdot \mu + \sum_i (x_i - \mu)^2 $"
+        return r"$f_{(\mu, \sigma^2)}(\vec{x}) =  8\cdot \mu + \sum_i (x_i - \mu)^2 $"
     if fname == "var_mu":
-        return r"$f_{(\sigma^2, \mu)}(\vec{x}) =  8\cdot \mu +\frac{1}{n-1}\sum_i (x_i - \mu)^2  $"
+        return r"$f_{(\mu, \sigma^2)}(\vec{x}) =   (\frac{1}{n}\sum_i x_i ,\frac{1}{n}\sum_i (x_i - \mu)^2)  $"
     else:
         return ""
 
@@ -103,7 +92,6 @@ def getBounds(dist, param_str):
     if dist == "normal":
         raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
         bounds = raw_str.split(",")
-        # print(bounds)
         return (-4 * float(bounds[1]), 4 * float(bounds[1]))
 
 
@@ -228,12 +216,12 @@ def plot_discrete(fname, dist, param_str):
     plt.gca().add_artist(legend2)
 
     plt.text(
-        0.8,
-        -0.2,
+        0.5,
+        -0.25,
         func_str,
         transform=ax.transAxes,
-        ha="left",
-        va="bottom",
+        ha="center",
+        va="center",
         bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
     )
 
@@ -262,12 +250,6 @@ def plot_cont(fname, dist, param_str):
     plt.xlabel(r"Input  $x_A$")
 
     plt.grid()
-    # plt.grid(which="minor", alpha=0.1)  # draw grid for minor ticks on x-axis
-    # ax2 = ax.twiny()
-    # ax2.spines["bottom"].set_position(("axes", -0.01))
-    # ax2.xaxis.set_ticks_position("top")
-    # ax2.spines["bottom"].set_visible(False)
-    # plt.xticks(np.arange(lower_bound,upper_bound, 1.0))
 
     func_str = function_str(fname)
 
@@ -288,7 +270,7 @@ def plot_cont(fname, dist, param_str):
             # for jj, vv in val.items():
             #     print(jj, vv)
             x_A = np.array([float(xi) for xi, vv in val.items()])
-            print(x_A)
+            # print(x_A)
             # print(min(x_A))
             # print(max(x_A))
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
@@ -337,22 +319,17 @@ def plot_cont(fname, dist, param_str):
         handles=hline_legened, loc="upper right", bbox_to_anchor=(1.3, 1.0), fontsize=14
     )
     plt.gca().add_artist(legend2)
+
     plt.text(
-        0.8,
-        -0.2,
+        0.5,
+        -0.25,
         func_str,
         transform=ax.transAxes,
-        ha="left",
-        va="bottom",
+        ha="center",
+        va="center",
         bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
     )
 
-    # plt.xticks(
-    #     np.arange(lower_bound, upper_bound, 1), minor=True
-    # )  # set minor ticks on x-axis
-    # plt.yticks(
-    #     np.arange(lower_bound, upper_bound, 1), minor=True
-    # )  # set minor ticks on y-axis
     plt.tick_params(which="minor", length=0)  # remove minor tick lines
 
     out_path = fig_dir + fname + "/" + dist
@@ -367,54 +344,29 @@ def plot_cont(fname, dist, param_str):
 
 def main():
 
-    plot_cont("max", "normal", "(0.0,1.0)")
-    plot_cont("max", "lognormal", "(0.0,1.0)")
-    plot_cont("var", "normal", "(0.0,1.0)")
-    plot_cont("var", "lognormal", "(0.0,1.0)")
-    plot_cont("median", "normal", "(0.0,1.0)")
-    plot_cont("median", "lognormal", "(0.0,1.0)")
-    plot_cont("var_mu", "normal", "(0.0,1.0)")
-    plot_cont("var_mu", "lognormal", "(0.0,1.0)")
-    plot_cont("max", "normal", "(0.0,2.0)")
-    plot_cont("max", "lognormal", "(0.0,2.0)")
-    plot_cont("var", "normal", "(0.0,2.0)")
-    plot_cont("var", "lognormal", "(0.0,2.0)")
-    plot_cont("median", "normal", "(0.0,2.0)")
-    plot_cont("median", "lognormal", "(0.0,2.0)")
-    plot_cont("var_mu", "normal", "(0.0,2.0)")
-    plot_cont("var_mu", "lognormal", "(0.0,2.0)")
-    plot_cont("max", "normal", "(0.0,4.0)")
-    plot_cont("max", "lognormal", "(0.0,4.0)")
-    plot_cont("var", "normal", "(0.0,4.0)")
-    plot_cont("var", "lognormal", "(0.0,4.0)")
-    plot_cont("median", "normal", "(0.0,4.0)")
-    plot_cont("median", "lognormal", "(0.0,4.0)")
-    plot_cont("var_mu", "normal", "(0.0,4.0)")
-    plot_cont("var_mu", "lognormal", "(0.0,4.0)")
+    json_fname = data_dir + "p_strs.json"
+    fname = open(json_fname)
+    param_strs_dict = json.load(fname)
 
-    # plot_discrete("var_mu", "uniform_int", "(0,3)")
-    # plot_discrete("var_nd_mu", "uniform_int", "(0,3)")
-    # plot_discrete("var_mu", "uniform_int", "(0,7)")
+    disc_dists = [
+         "uniform_int",
+         "poisson",
+    ]
+    
+    cont_dists = [
+         "normal",
+         "lognormal",
+    ]
+    
+    for dname in cont_dists:
+        for func in func_names:
+            for p_str in param_strs_dict[dname]:
+                plot_cont(func, dname, p_str)
 
-    # plot_discrete("max", "uniform_int", "(0,4)")
-    # plot_discrete("var", "uniform_int", "(0,7)")
-    # plot_discrete("var_nd", "uniform_int", "(0,7)")
-    # plot_discrete("median", "uniform_int", "(0,7)")
-    # plot_discrete("median", "uniform_int", "(0,15)")
-
-    # plot_discrete("var_mu", "uniform_int", "(0,3)")
-    # plot_discrete("var_nd_mu", "uniform_int", "(0,3)")
-    # plot_discrete("var_mu", "uniform_int", "(0,7)")
-    # plot_discrete("var_nd_mu", "uniform_int", "(0,7)")
-
-    # # plot_discrete("max", "poisson", "(4)")
-    # plot_discrete("var_nd", "poisson", "(4)")
-    # plot_discrete("median", "poisson", "(4)")
-
-    # # plot_discrete("max", "poisson", "(8)")
-    # plot_discrete("var_nd", "poisson", "(8)")
-    # plot_discrete("median", "poisson", "(8)")
-
+    for dname in disc_dists:
+        for func in func_names:
+            for p_str in param_strs_dict[dname]:
+                plot_discrete(func, dname, p_str)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

@@ -11,6 +11,7 @@ from dist_params import *
 from datetime import datetime
 from multiprocessing import Pool, freeze_support, cpu_count
 
+output_path = "../output_k1/"
 np.random.seed(0)
 
 numIterations = 10
@@ -22,6 +23,10 @@ k = 1
 
 # used for conitnuous input distributions
 step_size = 0.05
+
+
+# contains the mapping of the param strs (used as the filenames for the json data), which will be dumped to its own json later (to be used by plotting progrm so it knows all of the data available to plot)
+param_str_dict = {}
 
 
 class func:
@@ -110,7 +115,7 @@ def write_json(
         "awae_data": MI_data,
     }
     # print(data)
-    dir_path = "../output_k1/" + str(fn.fn_name) + "/" + str(params.t) + "/"
+    dir_path = output_path + str(fn.fn_name) + "/" + str(params.t) + "/"
 
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     pstr = params.getJSON()["param_str"]
@@ -160,15 +165,16 @@ def evaluate_estimator(params, numSpecs, xA, fn):
 
 def batch_ex_uniform_int(fn: func):
 
+    dist_name = "uniform_int"
     N_vals = np.array([4, 8, 16])
     x_A_min = 0
-
+    p_str_list = []
     for n in N_vals:
         spec_to_xA_to_MI = {}
         params = uniform_int_params(0, n)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         x_A_max = n
-
+        p_str_list.append(params.p_str)
         x_A_range = range(x_A_min, x_A_max)
 
         for numSpecs in range(1, maxNumSpecs):
@@ -189,15 +195,19 @@ def batch_ex_uniform_int(fn: func):
             spec_to_xA_to_MI,
             fn,
         )
+    param_str_dict[dist_name] = p_str_list
 
 
 def batch_ex_poisson(fn: func):
 
+    dist_name = "poisson"
     lam_vals = np.array([2, 4, 8])
     x_A_min = 0
+    p_str_list = []
     for lam in lam_vals:
         spec_to_xA_to_MI = {}
         params = poisson_params(lam)  # generates data from 0, 3-1
+        p_str_list.append(params.p_str)
         target_init_entropy = calculateTargetInitEntropy(params)
         x_A_max = lam * 10
 
@@ -221,17 +231,21 @@ def batch_ex_poisson(fn: func):
             spec_to_xA_to_MI,
             fn,
         )
+    param_str_dict[dist_name] = p_str_list
 
 
 def batch_ex_normal(fn: func):
 
+    dist_name = "normal"
     mu = 0.0
     sigma_vals = np.array([1.0, 2.0, 4.0])
 
+    p_str_list = []
     for sigma in sigma_vals:
         spec_to_xA_to_MI = {}
         params = normal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
+        p_str_list.append(params.p_str)
 
         x_A_min = -4.0 * sigma
         x_A_max = 4.0 * sigma
@@ -261,19 +275,22 @@ def batch_ex_normal(fn: func):
             spec_to_xA_to_MI,
             fn,
         )
+    param_str_dict[dist_name] = p_str_list
 
 
 def batch_ex_lognormal(fn: func):
-
-    mu = 0.0
+    dist_name = "lognormal"
     sigma_vals = np.array([1.0, 2.0, 4.0])
+    mu_vals = np.full((sigma_vals.size), 0.0)
     # sigma_vals = np.array([1.0])
+    p_str_list = []
 
     x_A_min = 0.00001
-    for sigma in sigma_vals:
+    for (sigma, mu) in zip(sigma_vals, mu_vals):
         spec_to_xA_to_MI = {}
         params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
+        p_str_list.append(params.p_str)
 
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
@@ -302,12 +319,14 @@ def batch_ex_lognormal(fn: func):
             spec_to_xA_to_MI,
             fn,
         )
+    param_str_dict[dist_name] = p_str_list
 
 
 def main():
     pass
     # params = uniform_int_params(0, 4)  # generates data from 0, 3-1
     # print("target init entropy : ", calculateTargetInitEntropy(params))
+
 
 def normal_exp():
     batch_ex_normal(fn_max)
@@ -337,6 +356,29 @@ def poisson_exp():
     batch_ex_poisson(fn_var_mu)
 
 
+def update_p_str_json():
+    json_fname = output_path + 'p_strs.json'
+    
+    my_file = Path(json_fname)
+    if not my_file.is_file(): # the file does not exist, so just create and dump
+        with open(json_fname, "w") as json_file:
+            json.dump(param_str_dict, json_file, default=int, indent=2)
+    else: 
+        # we need to open the existing version and compare with what was generated in this execution
+        fname =  open(json_fname)
+        old = json.load(fname)
+        print(old)
+        print(param_str_dict)
+        for key, value in param_str_dict.items():
+            if (key not in old) or (sorted(value) != sorted( old[key] )):
+                print("hi")
+                old[key] = value
+
+        with open(json_fname, "w") as json_file:
+            json.dump(old, json_file, default=int, indent=2)
+            
+        
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print("missing distribution name argument, exiting...")
@@ -354,9 +396,15 @@ if __name__ == "__main__":
                 normal_exp()
             case "uniform":
                 uniform_exp()
+            case "all":
+                poisson_exp()
+                uniform_exp()
+                normal_exp()
+                lognormal_exp()
             case _:
                 print("unknown distribution name provided, exiting...")
                 exit(1)
+        update_p_str_json()
 
         # main()
         print(
