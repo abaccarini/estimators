@@ -10,7 +10,8 @@ from dist_params import *
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
 
-output_path = "../output_k1/"
+k = 1
+output_path = "../output_k" + str(k)+"/"
 np.random.seed(0)
 
 numIterations = 100
@@ -18,11 +19,12 @@ maxNumSpecs = 11
 numT = 1
 numA = 1
 N = 5000
-k = 1
 
 # used for conitnuous input distributions
 step_size = 0.05
 
+# the number of threads we want to use for the experiments
+thread_count = 12 
 
 # contains the mapping of the param strs (used as the filenames for the json data), which will be dumped to its own json later (to be used by plotting progrm so it knows all of the data available to plot)
 param_str_dict = {}
@@ -178,7 +180,7 @@ def batch_ex_uniform_int(fn: func):
 
         for numSpecs in range(1, maxNumSpecs):
             print("uniform", fn.fn_name, n, numSpecs)
-            pool = Pool(int(cpu_count() / 2))
+            pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
@@ -214,7 +216,7 @@ def batch_ex_poisson(fn: func):
 
         for numSpecs in range(1, maxNumSpecs):
             print("poission", fn.fn_name, lam, numSpecs) # just used to track the status of experiments
-            pool = Pool(int(cpu_count() / 2))
+            pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
@@ -257,8 +259,7 @@ def batch_ex_normal(fn: func):
 
         for numSpecs in range(1, maxNumSpecs):
             print("normal", fn.fn_name, sigma, numSpecs)
-            pool = Pool(int(cpu_count() / 2))
-            # pool = Pool(20)
+            pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
@@ -281,6 +282,10 @@ def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
     sigma_vals = np.array([1.0, 2.0, 4.0])
     mu_vals = np.full((sigma_vals.size), 0.0)
+    sigma_vals =  np.append(sigma_vals, 0.145542 )
+    mu_vals =  np.append(mu_vals, 1.6702 )
+
+    
     # sigma_vals = np.array([1.0])
     p_str_list = []
 
@@ -301,7 +306,7 @@ def batch_ex_lognormal(fn: func):
 
         for numSpecs in range(1, maxNumSpecs):
             print("lognormal", fn.fn_name, sigma, numSpecs)
-            pool = Pool(int(cpu_count() / 2))
+            pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             # print(results)
@@ -382,23 +387,22 @@ if __name__ == "__main__":
         start_time = time.time()
 
         exp_name = sys.argv[1]
-        match exp_name:
-            case "poisson":
-                poisson_exp()
-            case "lognormal":
-                lognormal_exp()
-            case "normal":
-                normal_exp()
-            case "uniform":
-                uniform_exp()
-            case "all":
-                poisson_exp()
-                uniform_exp()
-                normal_exp()
-                lognormal_exp()
-            case _:
-                print("unknown distribution name provided, exiting...")
-                exit(1)
+        if exp_name == "poisson":
+            poisson_exp()
+        elif exp_name == "lognormal":
+            lognormal_exp()
+        elif exp_name == "normal":
+            normal_exp()
+        elif exp_name == "uniform":
+            uniform_exp()
+        elif exp_name == "all":
+            poisson_exp()
+            uniform_exp()
+            normal_exp()
+            lognormal_exp()
+        else:
+            print("unknown distribution name provided, exiting...")
+            exit(1)
         update_p_str_json()
 
         print(
