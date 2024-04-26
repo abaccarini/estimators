@@ -160,6 +160,7 @@ def evaluate_estimator(params, numSpecs, xA, fn):
     MI = 0.0
     for i in range(numIterations):
         s = sampleData(params, N, numT, numSpecs, [xA], fn)
+        # print("MI ", MI)
         MI += Mixed_KSG(s.x_T, s.O, k)
     return (xA, MI / float(numIterations))
 
@@ -168,6 +169,7 @@ def batch_ex_uniform_int(fn: func):
 
     dist_name = "uniform_int"
     N_vals = np.array([4, 8, 16])
+    # N_vals = np.array([4])
     x_A_min = 0
     p_str_list = []
     for n in N_vals:
@@ -185,7 +187,7 @@ def batch_ex_uniform_int(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
-
+            # print(xA_to_MI)
         write_json(
             numIterations,
             params,
@@ -345,10 +347,10 @@ def lognormal_exp():
 
 
 def uniform_exp():
-    batch_ex_uniform_int(fn_max)
+    # batch_ex_uniform_int(fn_max)
     batch_ex_uniform_int(fn_var)
-    batch_ex_uniform_int(fn_median)
-    batch_ex_uniform_int(fn_var_mu)
+    # batch_ex_uniform_int(fn_median)
+    # batch_ex_uniform_int(fn_var_mu)
 
 
 def poisson_exp():
@@ -369,8 +371,8 @@ def update_p_str_json():
         # we need to open the existing version and compare with what was generated in this execution
         fname = open(json_fname)
         old = json.load(fname)
-        print(old)
-        print(param_str_dict)
+        # print(old)
+        # print(param_str_dict)
         for key, value in param_str_dict.items():
             if (key not in old) or (sorted(value) != sorted(old[key])):
                 old[key] = value

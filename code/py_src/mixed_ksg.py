@@ -3,6 +3,9 @@ from scipy.special import digamma
 from math import log, log2, e
 import numpy as np
 
+EPSILON = 0
+# EPSILON = 1e-15 (used in the original implementation)
+# this was resulting in infinities for uniform_int when computing the variance
 """
     Estimate the mutual information I(X;Y) of X and Y from samples {x_i, y_i}_{i=1}^N
     Using *Mixed-KSG* mutual information estimator
@@ -40,11 +43,11 @@ def Mixed_KSG(x, y, k=5):
     for i in range(N):
         kp, nx, ny = k, k, k
         if knn_dis[i] == 0:
-            kp = len(tree_xy.query_ball_point(data[i], 1e-15, p=float("inf")))  # type: ignore
-            nx = len(tree_x.query_ball_point(x[i], 1e-15, p=float("inf")))  # type: ignore
-            ny = len(tree_y.query_ball_point(y[i], 1e-15, p=float("inf")))  # type: ignore
+            kp = len(tree_xy.query_ball_point(data[i], EPSILON, p=float("inf")))  # type: ignore
+            nx = len(tree_x.query_ball_point(x[i], EPSILON, p=float("inf")))  # type: ignore
+            ny = len(tree_y.query_ball_point(y[i], EPSILON, p=float("inf")))  # type: ignore
         else:
-            nx = len(tree_x.query_ball_point(x[i], knn_dis[i] - 1e-15, p=float("inf")))  # type: ignore
-            ny = len(tree_y.query_ball_point(y[i], knn_dis[i] - 1e-15, p=float("inf")))  # type: ignore
+            nx = len(tree_x.query_ball_point(x[i], knn_dis[i] - EPSILON, p=float("inf")))  # type: ignore
+            ny = len(tree_y.query_ball_point(y[i], knn_dis[i] - EPSILON, p=float("inf")))  # type: ignore
         ans += (digamma(kp) + log(N) - digamma(nx) - digamma(ny)) / N
     return ans * log2(e) # used to convert from nats to bits
