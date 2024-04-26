@@ -24,6 +24,10 @@ k = 1
 step_size = 0.05
 
 
+def var_mu(x):
+    return np.asarray([np.var(x), np.mean(x)])
+
+
 class sampleData:
     def __init__(self, params, N, numT, numS, x_A, thefunc):
         self.params = params  # the distribution params
@@ -100,7 +104,7 @@ def write_json(
         "awae_data": MI_data,
     }
     # print(data)
-    dir_path = "../output_py/" + str(fn.fn_name) + "/" + str(params.t) + "/"
+    dir_path = "../output_k1/" + str(fn.fn_name) + "/" + str(params.t) + "/"
 
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     pstr = params.getJSON()["param_str"]
@@ -143,16 +147,16 @@ def calculateTargetInitEntropy(dist_params):
 def evaluate_estimator(params, numSpecs, xA, fn):
     MI = 0.0
     for i in range(numIterations):
-        s = sampleData(params, N, numT, numSpecs, xA, fn)
+        s = sampleData(params, N, numT, numSpecs, [ xA ], fn)
         MI += Mixed_KSG(s.x_T, s.O, k)
     return (xA, MI / float(numIterations))
 
 
 def batch_ex_uniform_int(fn: func):
 
-    # N_vals = np.array([4])
     N_vals = np.array([4, 8, 16])
     x_A_min = 0
+
     for n in N_vals:
         spec_to_xA_to_MI = {}
         params = uniform_int_params(0, n)  # generates data from 0, 3-1
@@ -164,7 +168,7 @@ def batch_ex_uniform_int(fn: func):
         for numSpecs in range(1, maxNumSpecs):
             print("uniform", fn.fn_name, n, numSpecs)
             pool = Pool(int(cpu_count() / 2))
-            all_args = [(params, numSpecs, [xA], fn) for xA in x_A_range]
+            all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
@@ -183,13 +187,12 @@ def batch_ex_uniform_int(fn: func):
 
 def batch_ex_poisson(fn: func):
 
-    # N_vals = np.array([4])
     lam_vals = np.array([2, 4, 8])
+    x_A_min = 0
     for lam in lam_vals:
         spec_to_xA_to_MI = {}
         params = poisson_params(lam)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
-        x_A_min = 0
         x_A_max = lam * 10
 
         x_A_range = range(x_A_min, x_A_max)
@@ -197,7 +200,7 @@ def batch_ex_poisson(fn: func):
         for numSpecs in range(1, maxNumSpecs):
             print("poission", fn.fn_name, lam, numSpecs)
             pool = Pool(int(cpu_count() / 2))
-            all_args = [(params, numSpecs, [xA], fn) for xA in x_A_range]
+            all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
@@ -216,7 +219,6 @@ def batch_ex_poisson(fn: func):
 
 def batch_ex_normal(fn: func):
 
-    # N_vals = np.array([4])
     mu = 0.0
     sigma_vals = np.array([1.0, 2.0, 4.0])
 
@@ -232,14 +234,13 @@ def batch_ex_normal(fn: func):
             x_A_min,
             x_A_max,
             num=int((x_A_max - x_A_min) / step_size),
-            # x_A_min, x_A_max, num=50
         )
 
         for numSpecs in range(1, maxNumSpecs):
             print("normal", fn.fn_name, sigma, numSpecs)
             pool = Pool(int(cpu_count() / 2))
             # pool = Pool(20)
-            all_args = [(params, numSpecs, [xA], fn) for xA in x_A_range]
+            all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
@@ -258,11 +259,11 @@ def batch_ex_normal(fn: func):
 
 def batch_ex_lognormal(fn: func):
 
-    # N_vals = np.array([4])
     mu = 0.0
     sigma_vals = np.array([1.0, 2.0, 4.0])
     # sigma_vals = np.array([1.0])
 
+    x_A_min = 0.00001
     for sigma in sigma_vals:
         spec_to_xA_to_MI = {}
         params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
@@ -270,7 +271,6 @@ def batch_ex_lognormal(fn: func):
 
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
-        x_A_min = 0.00001
         x_A_max = 4.0 * sigma
 
         x_A_range = np.linspace(
@@ -280,8 +280,9 @@ def batch_ex_lognormal(fn: func):
         for numSpecs in range(1, maxNumSpecs):
             print("lognormal", fn.fn_name, sigma, numSpecs)
             pool = Pool(int(cpu_count() / 2))
-            all_args = [(params, numSpecs, [xA], fn) for xA in x_A_range]
+            all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
+            # print(results)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
 
@@ -318,14 +319,11 @@ def main():
     # # batch_ex_uniform_int(fn)
     # # batch_ex_poisson(fn)
 
-    fn = func(np.median, "median")
-    batch_ex_lognormal(fn)
-    batch_ex_normal(fn)
+    # fn = func(np.median, "median")
+    # batch_ex_lognormal(fn)
+    # batch_ex_normal(fn)
     # batch_ex_uniform_int(fn)
     # batch_ex_poisson(fn)
-
-    def var_mu(x):
-        return np.asarray([np.var(x), np.mean(x)])
 
     fn = func(var_mu, "var_mu")
     batch_ex_lognormal(fn)

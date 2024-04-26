@@ -51,7 +51,7 @@ func_names = [
     "var_nd_mu",
 ]
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
-data_dir = "../output_py/"
+data_dir = "../output_k1/"
 fig_dir = "../figs_py/"
 
 
@@ -103,7 +103,7 @@ def getBounds(dist, param_str):
     if dist == "normal":
         raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
         bounds = raw_str.split(",")
-        print(bounds)
+        # print(bounds)
         return (-4 * float(bounds[1]), 4 * float(bounds[1]))
 
 
@@ -122,7 +122,7 @@ def plot_discrete(fname, dist, param_str):
 
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
-    print(files)
+    # print(files)
     file = [f for f in files if Path(f).stem == param_str][0]
     # print(file)
     lower_bound, upper_bound = getBounds(dist, param_str)
@@ -145,7 +145,7 @@ def plot_discrete(fname, dist, param_str):
         ax2.set_xticklabels([r"$\lambda = %s$" % lam], rotation=0, color="red")
     if dist == "uniform_int":
         a, b = getParams(dist, param_str)
-        print(a, b)
+        # print(a, b)
         n = float(a + b - 1) / 2.0
         ax2.axvline(float(a + b - 1) / 2.0, linestyle="--", alpha=0.5, color="black")
         ax2.set_xticks([n])
@@ -164,7 +164,7 @@ def plot_discrete(fname, dist, param_str):
     oe_key = 0
     t_init = json_data["target_init_entropy"]
     # print("bounds : ", lower_bound, upper_bound)
-    print(json_data["awae_data"])
+    # print(json_data["awae_data"])
     # return
     for numSpec, val in json_data["awae_data"].items():
         if int(numSpec) < max_numspec:
@@ -251,11 +251,11 @@ def plot_cont(fname, dist, param_str):
     verify_args(fname, dist)
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
-    print(files)
+    # print(files)
     file = [f for f in files if Path(f).stem == param_str][0]
-    print(file)
+    # print(file)
     lower_bound, upper_bound = getBounds(dist, param_str)
-    print(lower_bound, upper_bound)
+    # print(lower_bound, upper_bound)
     max_numspec = 6
     fig, ax = plt.subplots()
     plt.ylabel(r"Entropy (bits)")
@@ -289,8 +289,8 @@ def plot_cont(fname, dist, param_str):
             #     print(jj, vv)
             x_A = np.array([float(xi) for xi, vv in val.items()])
             print(x_A)
-            print(min(x_A))
-            print(max(x_A))
+            # print(min(x_A))
+            # print(max(x_A))
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
             # awae = np.array([np.array(xi) for xi in val])[:, 1]  # col slice, awaes
             label = r"$\lvert S\rvert\ = %s$" % numSpec
@@ -367,36 +367,36 @@ def plot_cont(fname, dist, param_str):
 
 def main():
 
-    # plot_cont("max", "normal", "(0.0,1.0)")
-    # plot_cont("max", "lognormal", "(0.0,1.0)")
-    # plot_cont("var", "normal", "(0.0,1.0)")
-    # plot_cont("var", "lognormal", "(0.0,1.0)")
-    # plot_cont("median", "normal", "(0.0,1.0)")
-    # plot_cont("median", "lognormal", "(0.0,1.0)")
-    # plot_cont("var_mu", "normal", "(0.0,1.0)")
-    # plot_cont("var_mu", "lognormal", "(0.0,1.0)")
-    # plot_cont("max", "normal", "(0.0,2.0)")
-    # plot_cont("max", "lognormal", "(0.0,2.0)")
-    # plot_cont("var", "normal", "(0.0,2.0)")
-    # plot_cont("var", "lognormal", "(0.0,2.0)")
-    # plot_cont("median", "normal", "(0.0,2.0)")
-    # plot_cont("median", "lognormal", "(0.0,2.0)")
-    # plot_cont("var_mu", "normal", "(0.0,2.0)")
-    # plot_cont("var_mu", "lognormal", "(0.0,2.0)")
-    # plot_cont("max", "normal", "(0.0,4.0)")
-    # plot_cont("max", "lognormal", "(0.0,4.0)")
-    # plot_cont("var", "normal", "(0.0,4.0)")
-    # plot_cont("var", "lognormal", "(0.0,4.0)")
-    # plot_cont("median", "normal", "(0.0,4.0)")
-    # plot_cont("median", "lognormal", "(0.0,4.0)")
-    # plot_cont("var_mu", "normal", "(0.0,4.0)")
-    # plot_cont("var_mu", "lognormal", "(0.0,4.0)")
+    plot_cont("max", "normal", "(0.0,1.0)")
+    plot_cont("max", "lognormal", "(0.0,1.0)")
+    plot_cont("var", "normal", "(0.0,1.0)")
+    plot_cont("var", "lognormal", "(0.0,1.0)")
+    plot_cont("median", "normal", "(0.0,1.0)")
+    plot_cont("median", "lognormal", "(0.0,1.0)")
+    plot_cont("var_mu", "normal", "(0.0,1.0)")
+    plot_cont("var_mu", "lognormal", "(0.0,1.0)")
+    plot_cont("max", "normal", "(0.0,2.0)")
+    plot_cont("max", "lognormal", "(0.0,2.0)")
+    plot_cont("var", "normal", "(0.0,2.0)")
+    plot_cont("var", "lognormal", "(0.0,2.0)")
+    plot_cont("median", "normal", "(0.0,2.0)")
+    plot_cont("median", "lognormal", "(0.0,2.0)")
+    plot_cont("var_mu", "normal", "(0.0,2.0)")
+    plot_cont("var_mu", "lognormal", "(0.0,2.0)")
+    plot_cont("max", "normal", "(0.0,4.0)")
+    plot_cont("max", "lognormal", "(0.0,4.0)")
+    plot_cont("var", "normal", "(0.0,4.0)")
+    plot_cont("var", "lognormal", "(0.0,4.0)")
+    plot_cont("median", "normal", "(0.0,4.0)")
+    plot_cont("median", "lognormal", "(0.0,4.0)")
+    plot_cont("var_mu", "normal", "(0.0,4.0)")
+    plot_cont("var_mu", "lognormal", "(0.0,4.0)")
 
     # plot_discrete("var_mu", "uniform_int", "(0,3)")
     # plot_discrete("var_nd_mu", "uniform_int", "(0,3)")
     # plot_discrete("var_mu", "uniform_int", "(0,7)")
 
-    plot_discrete("max", "uniform_int", "(0,4)")
+    # plot_discrete("max", "uniform_int", "(0,4)")
     # plot_discrete("var", "uniform_int", "(0,7)")
     # plot_discrete("var_nd", "uniform_int", "(0,7)")
     # plot_discrete("median", "uniform_int", "(0,7)")
