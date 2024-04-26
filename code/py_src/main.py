@@ -24,8 +24,20 @@ k = 1
 step_size = 0.05
 
 
+class func:
+    def __init__(self, fn, fn_name):
+        self.fn = fn
+        self.fn_name = fn_name
+
+
 def var_mu(x):
     return np.asarray([np.var(x), np.mean(x)])
+
+
+fn_max = func(np.max, "max")
+fn_var = func(np.var, "var")
+fn_median = func(np.median, "median")
+fn_var_mu = func(var_mu, "var_mu")
 
 
 class sampleData:
@@ -80,12 +92,6 @@ class sampleData:
     def update_xA(self, x_A):
         self.x_A = x_A
         self.O = self.produceOutputs()
-
-
-class func:
-    def __init__(self, fn, fn_name):
-        self.fn = fn
-        self.fn_name = fn_name
 
 
 def write_json(
@@ -147,7 +153,7 @@ def calculateTargetInitEntropy(dist_params):
 def evaluate_estimator(params, numSpecs, xA, fn):
     MI = 0.0
     for i in range(numIterations):
-        s = sampleData(params, N, numT, numSpecs, [ xA ], fn)
+        s = sampleData(params, N, numT, numSpecs, [xA], fn)
         MI += Mixed_KSG(s.x_T, s.O, k)
     return (xA, MI / float(numIterations))
 
@@ -299,43 +305,60 @@ def batch_ex_lognormal(fn: func):
 
 
 def main():
-
+    pass
     # params = uniform_int_params(0, 4)  # generates data from 0, 3-1
     # print("target init entropy : ", calculateTargetInitEntropy(params))
 
-    # def fn(x):
-    #     # return np.asarray([sum(x), sum(x)])
-    #     return np.asarray([sum(x)])
+def normal_exp():
+    batch_ex_normal(fn_max)
+    batch_ex_normal(fn_var)
+    batch_ex_normal(fn_median)
+    batch_ex_normal(fn_var_mu)
 
-    # fn = func(np.max, "max")
-    # batch_ex_lognormal(fn)
-    # batch_ex_normal(fn)
-    # # batch_ex_uniform_int(fn)
-    # # batch_ex_poisson(fn)
 
-    # fn = func(np.var, "var")
-    # batch_ex_lognormal(fn)
-    # batch_ex_normal(fn)
-    # # batch_ex_uniform_int(fn)
-    # # batch_ex_poisson(fn)
+def lognormal_exp():
+    batch_ex_lognormal(fn_max)
+    batch_ex_lognormal(fn_var)
+    batch_ex_lognormal(fn_median)
+    batch_ex_lognormal(fn_var_mu)
 
-    # fn = func(np.median, "median")
-    # batch_ex_lognormal(fn)
-    # batch_ex_normal(fn)
-    # batch_ex_uniform_int(fn)
-    # batch_ex_poisson(fn)
 
-    fn = func(var_mu, "var_mu")
-    batch_ex_lognormal(fn)
-    batch_ex_normal(fn)
-    # batch_ex_uniform_int(fn)
-    # batch_ex_poisson(fn)
+def uniform_exp():
+    batch_ex_uniform_int(fn_max)
+    batch_ex_uniform_int(fn_var)
+    batch_ex_uniform_int(fn_median)
+    batch_ex_uniform_int(fn_var_mu)
+
+
+def poisson_exp():
+    batch_ex_poisson(fn_max)
+    batch_ex_poisson(fn_var)
+    batch_ex_poisson(fn_median)
+    batch_ex_poisson(fn_var_mu)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
+    if len(sys.argv) <= 1:
+        print("missing distribution name argument, exiting...")
+        exit(1)
+    else:
         start_time = time.time()
-        main()
+
+        exp_name = sys.argv[1]
+        match exp_name:
+            case "poisson":
+                poisson_exp()
+            case "lognormal":
+                lognormal_exp()
+            case "normal":
+                normal_exp()
+            case "uniform":
+                uniform_exp()
+            case _:
+                print("unknown distribution name provided, exiting...")
+                exit(1)
+
+        # main()
         print(
             "finished computation at %s\nelapsed time: %s seconds "
             % (time.ctime(), time.time() - start_time)
