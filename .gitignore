@@ -32,7 +32,6 @@
 *.app
 
 *.pem
-*.json
 *.pyc
 build/
 .cache/

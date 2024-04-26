@@ -1,0 +1,116 @@
+{
+  "name": "var",
+  "dist": {
+    "dist_name": "uniform_int",
+    "a": 0,
+    "b": 8,
+    "param_str": "(0,8)"
+  },
+  "num_samples": 1000,
+  "num_T": 1,
+  "num_A": 1,
+  "num_iterations": 10,
+  "target_init_entropy": 3.0,
+  "awae_data": {
+    "1": {
+      "0": 1.2651397011152667,
+      "1": 1.0874034639557493,
+      "2": 0.9687471579491129,
+      "3": 0.8469025213414701,
+      "4": 0.8439550184727915,
+      "5": 0.9669045878653499,
+      "6": 1.0768852330503362,
+      "7": 1.2670998772171456
+    },
+    "2": {
+      "0": 0.7105575399037146,
+      "1": 0.6125337850824195,
+      "2": 0.5616814616580847,
+      "3": 0.518238506433421,
+      "4": 0.5239359102008161,
+      "5": 0.5545371319576986,
+      "6": 0.6040516412752123,
+      "7": 0.7105686723758906
+    },
+    "3": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "4": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "5": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "6": {
+      "0": 0.15441193392623928,
+      "1": 0.15810801788345832,
+      "2": 0.1389914960109596,
+      "3": 0.11828201165792165,
+      "4": 0.13382872837274784,
+      "5": 0.13333813647613818,
+      "6": 0.15124112470923348,
+      "7": 0.15372198305368318
+    },
+    "7": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "8": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "9": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    },
+    "10": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity,
+      "4": Infinity,
+      "5": Infinity,
+      "6": Infinity,
+      "7": Infinity
+    }
+  }
+}

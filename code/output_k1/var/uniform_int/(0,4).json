@@ -1,0 +1,76 @@
+{
+  "name": "var",
+  "dist": {
+    "dist_name": "uniform_int",
+    "a": 0,
+    "b": 4,
+    "param_str": "(0,4)"
+  },
+  "num_samples": 1000,
+  "num_T": 1,
+  "num_A": 1,
+  "num_iterations": 10,
+  "target_init_entropy": 2.0,
+  "awae_data": {
+    "1": {
+      "0": 0.6822917462655615,
+      "1": 0.5133377677368945,
+      "2": 0.5128568989304333,
+      "3": 0.6862944488441063
+    },
+    "2": {
+      "0": 0.3970248941209842,
+      "1": 0.33203373388902163,
+      "2": 0.33284399962038047,
+      "3": 0.40183114966164035
+    },
+    "3": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "4": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "5": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "6": {
+      "0": 0.08268949938796828,
+      "1": 0.0863547583638448,
+      "2": 0.07992857639980676,
+      "3": 0.08534180729316937
+    },
+    "7": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "8": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "9": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    },
+    "10": {
+      "0": Infinity,
+      "1": Infinity,
+      "2": Infinity,
+      "3": Infinity
+    }
+  }
+}
