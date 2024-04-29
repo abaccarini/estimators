@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 project(estimator LANGUAGES C CXX)
 
-
-SET(CMAKE_COLOR_MAKEFILE ON)
+# used to generate compile commands.json (used by LSPs)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COLOR_MAKEFILE ON)
 
 set(CMAKE_C_FLAGS "-Wall")
 set(CMAKE_C_FLAGS_DEBUG "-g")
@@ -30,31 +31,32 @@ find_package(Boost REQUIRED)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
-INCLUDE_DIRECTORIES(
-  "${MPFR_INCLUDES}"
-  "${GMP_INCLUDES}"
-  "${CMAKE_SOURCE_DIR}/src"
-  "${CMAKE_SOURCE_DIR}/src/headers"
-  "${EIGEN3_INCLUDE_DIR}"
-  "${Boost_INCLUDE_DIRS}"
-)
+include_directories(
+  "${MPFR_INCLUDES}" "${GMP_INCLUDES}" "${CMAKE_SOURCE_DIR}/src"
+  "${CMAKE_SOURCE_DIR}/src/headers" "${EIGEN3_INCLUDE_DIR}"
+  "${Boost_INCLUDE_DIRS}")
 
 # set(SOURCE_FILES src/main.c)
-file(GLOB SOURCES
-  "src/*.cpp"
-)
+file(GLOB SOURCES "src/*.cpp")
 
 add_executable(estimator ${SOURCES})
 
-target_link_libraries(estimator ${MPFR_LIBRARIES} ${GMP_LIBRARIES} ${GSL_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(estimator ${MPFR_LIBRARIES} ${GMP_LIBRARIES}
+                      ${GSL_LIBRARIES} ${Boost_LIBRARIES})
 
-install(TARGETS estimator
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+install(TARGETS estimator DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
 
-add_custom_target(clean-all
-  make clean && rm -fR ${CMAKE_BINARY_DIR}/CMakeCache.txt
+add_custom_target(
+  clean-all
+  make
+  clean
+  &&
+  rm
+  -fR
+  ${CMAKE_BINARY_DIR}/CMakeCache.txt
   ${CMAKE_BINARY_DIR}/cmake_install.cmake
   ${CMAKE_BINARY_DIR}/Makefile
   ${CMAKE_BINARY_DIR}/CMakeFiles
-  && rmdir ${CMAKE_BINARY_DIR}/build
-)
+  &&
+  rmdir
+  ${CMAKE_BINARY_DIR}/build)

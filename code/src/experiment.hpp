@@ -75,7 +75,7 @@ void continuous_exp(std::string exp_name, DIST_T<IN_T> dist, std::function<OUT_T
     writeJSON_continuous<IN_T, OUT_T, DIST_T>(dd);
 }
 
-void batch_exp_discrete_uniform(std::string, const size_t numSamples = 3000);
+void batch_exp_discrete_uniform(std::string);
 void batch_exp_poisson(std::string);
 
 void batch_exp_normal(std::string exp_name);

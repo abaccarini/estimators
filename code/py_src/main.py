@@ -14,17 +14,18 @@ k = 1
 output_path = "../output_k" + str(k)+"/"
 np.random.seed(0)
 
-numIterations = 100
+numIterations = 10
 maxNumSpecs = 11
+minNumSpecs = 1
 numT = 1
 numA = 1
-N = 5000
+N = 3000
 
 # used for conitnuous input distributions
 step_size = 0.05
 
 # the number of threads we want to use for the experiments
-thread_count = 12 
+thread_count = 14
 
 # contains the mapping of the param strs (used as the filenames for the json data), which will be dumped to its own json later (to be used by plotting progrm so it knows all of the data available to plot)
 param_str_dict = {}
@@ -180,7 +181,7 @@ def batch_ex_uniform_int(fn: func):
         p_str_list.append(params.p_str)
         x_A_range = range(x_A_min, x_A_max)
 
-        for numSpecs in range(1, maxNumSpecs):
+        for numSpecs in range(minNumSpecs, maxNumSpecs):
             print("uniform", fn.fn_name, n, numSpecs)
             pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
@@ -216,7 +217,7 @@ def batch_ex_poisson(fn: func):
 
         x_A_range = range(x_A_min, x_A_max)
 
-        for numSpecs in range(1, maxNumSpecs):
+        for numSpecs in range(minNumSpecs, maxNumSpecs):
             print("poission", fn.fn_name, lam, numSpecs) # just used to track the status of experiments
             pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
@@ -259,7 +260,7 @@ def batch_ex_normal(fn: func):
             num=int((x_A_max - x_A_min) / step_size),
         )
 
-        for numSpecs in range(1, maxNumSpecs):
+        for numSpecs in range(minNumSpecs, maxNumSpecs):
             print("normal", fn.fn_name, sigma, numSpecs)
             pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
@@ -306,7 +307,7 @@ def batch_ex_lognormal(fn: func):
             x_A_min, x_A_max, num=int((x_A_max - x_A_min) / step_size)
         )
 
-        for numSpecs in range(1, maxNumSpecs):
+        for numSpecs in range(minNumSpecs, maxNumSpecs):
             print("lognormal", fn.fn_name, sigma, numSpecs)
             pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
@@ -347,16 +348,16 @@ def lognormal_exp():
 
 
 def uniform_exp():
-    # batch_ex_uniform_int(fn_max)
+    batch_ex_uniform_int(fn_max)
     batch_ex_uniform_int(fn_var)
-    # batch_ex_uniform_int(fn_median)
-    # batch_ex_uniform_int(fn_var_mu)
+    batch_ex_uniform_int(fn_median)
+    batch_ex_uniform_int(fn_var_mu)
 
 
 def poisson_exp():
     batch_ex_poisson(fn_max)
-    batch_ex_poisson(fn_var)
     batch_ex_poisson(fn_median)
+    batch_ex_poisson(fn_var)
     batch_ex_poisson(fn_var_mu)
 
 
@@ -387,7 +388,11 @@ if __name__ == "__main__":
         exit(1)
     else:
         start_time = time.time()
-
+        print("numSamples ", N)
+        print("numIterations ", numIterations)
+        print("k ", k)
+        print("thread_count ", thread_count)
+        print("step_size ", step_size)
         exp_name = sys.argv[1]
         if exp_name == "poisson":
             poisson_exp()

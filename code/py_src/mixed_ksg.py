@@ -3,8 +3,8 @@ from scipy.special import digamma
 from math import log, log2, e
 import numpy as np
 
-EPSILON = 0
-# EPSILON = 1e-15 (used in the original implementation)
+# EPSILON = 0.0
+EPSILON = 1e-15  # (used in the original implementation)
 # this was resulting in infinities for uniform_int when computing the variance
 """
     Estimate the mutual information I(X;Y) of X and Y from samples {x_i, y_i}_{i=1}^N
@@ -16,6 +16,8 @@ EPSILON = 0
 
     Output: onmber of I(X;Y)
 """
+
+
 def Mixed_KSG(x, y, k=5):
 
     assert len(x) == len(y), "Lists should have same length"
@@ -38,11 +40,11 @@ def Mixed_KSG(x, y, k=5):
     tree_y = ss.cKDTree(y)
 
     knn_dis = [tree_xy.query(point, k + 1, p=float("inf"))[0][k] for point in data]
-
     ans = 0
     for i in range(N):
-        kp, nx, ny = k, k, k
-        if knn_dis[i] == 0:
+        kp = k
+        # if knn_dis[i] == 0: # this was creating problems for purely discrete input distributions
+        if np.isclose(knn_dis[i] , 0):  # is functionally zero, and we treat it as such
             kp = len(tree_xy.query_ball_point(data[i], EPSILON, p=float("inf")))  # type: ignore
             nx = len(tree_x.query_ball_point(x[i], EPSILON, p=float("inf")))  # type: ignore
             ny = len(tree_y.query_ball_point(y[i], EPSILON, p=float("inf")))  # type: ignore
@@ -50,4 +52,4 @@ def Mixed_KSG(x, y, k=5):
             nx = len(tree_x.query_ball_point(x[i], knn_dis[i] - EPSILON, p=float("inf")))  # type: ignore
             ny = len(tree_y.query_ball_point(y[i], knn_dis[i] - EPSILON, p=float("inf")))  # type: ignore
         ans += (digamma(kp) + log(N) - digamma(nx) - digamma(ny)) / N
-    return ans * log2(e) # used to convert from nats to bits
+    return ans * log2(e)  # used to convert from nats to bits

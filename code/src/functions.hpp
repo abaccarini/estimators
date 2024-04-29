@@ -65,7 +65,7 @@ U compute_var(std::map<T, size_t> &map, const size_t &num_samples) {
     U total = 0;
     for (const auto &[num, count] : map)
         total += static_cast<U>(count) * (static_cast<U>(num) - mu) * (static_cast<U>(num) - mu); // (x_i - mu)^2, count is the number of occurences of a pice of data
-    return total / static_cast<U>(num_samples - 1);
+    return total / static_cast<U>(num_samples);
 }
 
 // same as above, but with no division at the end

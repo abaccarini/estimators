@@ -149,7 +149,7 @@ void writeJSON_discrete(discrete_data<IN_T, OUT_T, DIST_T> data) {
     json js;
     to_json(js, data);
 
-    string dir_path = "../output/" + string(data.name) + "/" + string(js.at("dist").at("dist_name"))+"/";
+    string dir_path = "../output_cpp/" + string(data.name) + "/" + string(js.at("dist").at("dist_name"))+"/";
     std::system(("mkdir -p " + dir_path).c_str());
     // std::cout << js.dump(1) << std::endl;
 
@@ -171,7 +171,7 @@ void writeJSON_continuous(continuous_data<IN_T, OUT_T, DIST_T> data) {
     json js;
     to_json(js, data);
 
-    string dir_path = "../output/" + string(data.name) + "/" + string(js.at("dist").at("dist_name"))+"/";
+    string dir_path = "../output_cpp/" + string(data.name) + "/" + string(js.at("dist").at("dist_name"))+"/";
     std::system(("mkdir -p " + dir_path).c_str());
     // std::cout << js.dump(1) << std::endl;
 

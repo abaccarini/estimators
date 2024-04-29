@@ -3,9 +3,10 @@
 #include <random>
 
 // default numSamples is 3000
-void batch_exp_discrete_uniform(std::string exp_name, const size_t numSamples) {
-    const size_t numIterations = 500; // how many times we repeat computation to eliminate noise/random deviations
-    // const size_t numSamples = 3000;   // number of items in estimator
+void batch_exp_discrete_uniform(std::string exp_name) {
+    const size_t numIterations = 10; // how many times we repeat computation to eliminate noise/random deviations
+    const size_t numSamples = 1000; // number of items in estimator
+
     const size_t maxNumSpecs = 10;
     const size_t numTargets = 1;
     const size_t numAttackers = 1;

@@ -75,14 +75,14 @@ void testing_main() {
     // compute_awae();
     // batch_exp_discrete_uniform("max");
     // batch_exp_discrete_uniform("median");
-    // batch_exp_discrete_uniform("var");
+    batch_exp_discrete_uniform("var");
     // batch_exp_discrete_uniform("var_nd");
     // batch_exp_discrete_uniform("var_mu");
     // batch_exp_discrete_uniform("var_nd_mu");
     // batch_exp_poisson("median");
     // batch_exp_poisson("max");
     // batch_exp_poisson("var_nd");
-    test_knn_est();
+    // test_knn_est();
     // batch_exp_normal("max");
     // rng_testing_main();
     // test_est();
