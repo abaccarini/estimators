@@ -403,7 +403,7 @@ if __name__ == "__main__":
             normal_exp()
             lognormal_exp()
         else:
-            print("unknown distribution name provided, exiting...")
+            print("unknown distribution name provided (%s), exiting..."% (exp_name))
             exit(1)
         update_p_str_json()
 
