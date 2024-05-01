@@ -19,7 +19,7 @@ maxNumSpecs = 11
 minNumSpecs = 1
 numT = 1
 numA = 1
-N = 3000
+N = 5000
 
 # used for conitnuous input distributions
 step_size = 0.05
@@ -283,11 +283,13 @@ def batch_ex_normal(fn: func):
 
 def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
-    sigma_vals = np.array([1.0, 2.0, 4.0])
+    # sigma_vals = np.array([1.0, 2.0, 4.0, 8.0])
+    sigma_vals = np.array([])
     mu_vals = np.full((sigma_vals.size), 0.0)
     sigma_vals =  np.append(sigma_vals, 0.145542 )
     mu_vals =  np.append(mu_vals, 1.6702 )
-
+    print(sigma_vals)
+    print(mu_vals)
     
     # sigma_vals = np.array([1.0])
     p_str_list = []
@@ -298,11 +300,14 @@ def batch_ex_lognormal(fn: func):
         params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         p_str_list.append(params.p_str)
+        x_A_max = 4.0 * sigma
 
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
-        x_A_max = 4.0 * sigma
-
+        if np.isclose(sigma , 0.145542):  # is functionally zero, and we treat it as such
+            x_A_max = 10
+        print("x_A_max", x_A_max)
+            
         x_A_range = np.linspace(
             x_A_min, x_A_max, num=int((x_A_max - x_A_min) / step_size)
         )
