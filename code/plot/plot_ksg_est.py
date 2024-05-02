@@ -270,6 +270,8 @@ def plot_cont(fname, dist, param_str):
             # for jj, vv in val.items():
             #     print(jj, vv)
             x_A = np.array([float(xi) for xi, vv in val.items()])
+            if max(x_A) > upper_bound:
+                upper_bound = max(x_A)
             # print(x_A)
             # print(min(x_A))
             # print(max(x_A))

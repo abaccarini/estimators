@@ -11,7 +11,7 @@ from datetime import datetime
 from multiprocessing import Pool, cpu_count
 
 k = 1
-output_path = "../output_k" + str(k)+"/"
+output_path = "../output_k" + str(k) + "/"
 np.random.seed(0)
 
 numIterations = 10
@@ -41,9 +41,15 @@ def var_mu(x):
     return np.asarray([np.var(x), np.mean(x)])
 
 
+def median_min(x):
+    np.sort(x)
+    return x[int(x.size() / 2)]
+
+
 fn_max = func(np.max, "max")
 fn_var = func(np.var, "var")
 fn_median = func(np.median, "median")
+fn_median_min = func(median_min, "median_min")
 fn_var_mu = func(var_mu, "var_mu")
 
 
@@ -218,7 +224,9 @@ def batch_ex_poisson(fn: func):
         x_A_range = range(x_A_min, x_A_max)
 
         for numSpecs in range(minNumSpecs, maxNumSpecs):
-            print("poission", fn.fn_name, lam, numSpecs) # just used to track the status of experiments
+            print(
+                "poission", fn.fn_name, lam, numSpecs
+            )  # just used to track the status of experiments
             pool = Pool(thread_count)
             all_args = [(params, numSpecs, xA, fn) for xA in x_A_range]
             results = pool.starmap(evaluate_estimator, all_args)
@@ -286,11 +294,11 @@ def batch_ex_lognormal(fn: func):
     # sigma_vals = np.array([1.0, 2.0, 4.0, 8.0])
     sigma_vals = np.array([])
     mu_vals = np.full((sigma_vals.size), 0.0)
-    sigma_vals =  np.append(sigma_vals, 0.145542 )
-    mu_vals =  np.append(mu_vals, 1.6702 )
+    sigma_vals = np.append(sigma_vals, 0.145542)
+    mu_vals = np.append(mu_vals, 1.6702)
     print(sigma_vals)
     print(mu_vals)
-    
+
     # sigma_vals = np.array([1.0])
     p_str_list = []
 
@@ -304,10 +312,10 @@ def batch_ex_lognormal(fn: func):
 
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
-        if np.isclose(sigma , 0.145542):  # is functionally zero, and we treat it as such
+        if np.isclose(sigma, 0.145542):  # is functionally zero, and we treat it as such
             x_A_max = 10
         print("x_A_max", x_A_max)
-            
+
         x_A_range = np.linspace(
             x_A_min, x_A_max, num=int((x_A_max - x_A_min) / step_size)
         )
@@ -338,32 +346,59 @@ def main():
     pass
 
 
-def normal_exp():
-    batch_ex_normal(fn_max)
-    batch_ex_normal(fn_var)
-    batch_ex_normal(fn_median)
-    batch_ex_normal(fn_var_mu)
+def normal_exp(exp_name):
+    if exp_name == "max" or exp_name == "all":
+        batch_ex_normal(fn_max)
+    if exp_name == "var" or exp_name == "all":
+        batch_ex_normal(fn_var)
+    if exp_name == "median" or exp_name == "all":
+        batch_ex_normal(fn_median)
+    if exp_name == "median_min" or exp_name == "all":
+        batch_ex_normal(fn_median_min)
+    if exp_name == "var_mu" or exp_name == "all":
+        batch_ex_normal(fn_var_mu)
 
 
-def lognormal_exp():
-    batch_ex_lognormal(fn_max)
-    batch_ex_lognormal(fn_var)
-    batch_ex_lognormal(fn_median)
-    batch_ex_lognormal(fn_var_mu)
+def lognormal_exp(exp_name):
+
+    if exp_name == "max" or exp_name == "all":
+        batch_ex_lognormal(fn_max)
+    if exp_name == "var" or exp_name == "all":
+        batch_ex_lognormal(fn_var)
+    if exp_name == "median" or exp_name == "all":
+        batch_ex_lognormal(fn_median)
+    if exp_name == "median_min" or exp_name == "all":
+        batch_ex_lognormal(fn_median_min)
+    if exp_name == "var_mu" or exp_name == "all":
+        batch_ex_lognormal(fn_var_mu)
 
 
-def uniform_exp():
-    batch_ex_uniform_int(fn_max)
-    batch_ex_uniform_int(fn_var)
-    batch_ex_uniform_int(fn_median)
-    batch_ex_uniform_int(fn_var_mu)
+def uniform_exp(exp_name):
+
+    if exp_name == "max" or exp_name == "all":
+        batch_ex_uniform_int(fn_max)
+    if exp_name == "var" or exp_name == "all":
+        batch_ex_uniform_int(fn_var)
+    if exp_name == "median" or exp_name == "all":
+        batch_ex_uniform_int(fn_median)
+    if exp_name == "median_min" or exp_name == "all":
+        batch_ex_uniform_int(fn_median_min)
+    if exp_name == "var_mu" or exp_name == "all":
+        batch_ex_uniform_int(fn_var_mu)
 
 
-def poisson_exp():
-    batch_ex_poisson(fn_max)
-    batch_ex_poisson(fn_median)
-    batch_ex_poisson(fn_var)
-    batch_ex_poisson(fn_var_mu)
+def poisson_exp(exp_name):
+
+    if exp_name == "max" or exp_name == "all":
+        batch_ex_poisson(fn_max)
+    if exp_name == "var" or exp_name == "all":
+        batch_ex_poisson(fn_var)
+    if exp_name == "median" or exp_name == "all":
+        batch_ex_poisson(fn_median)
+    if exp_name == "median_min" or exp_name == "all":
+        batch_ex_poisson(fn_median_min)
+    if exp_name == "var_mu" or exp_name == "all":
+        batch_ex_poisson(fn_var_mu)
 
 
 def update_p_str_json():
@@ -398,22 +433,27 @@ if __name__ == "__main__":
         print("k ", k)
         print("thread_count ", thread_count)
         print("step_size ", step_size)
-        exp_name = sys.argv[1]
-        if exp_name == "poisson":
-            poisson_exp()
-        elif exp_name == "lognormal":
-            lognormal_exp()
-        elif exp_name == "normal":
-            normal_exp()
-        elif exp_name == "uniform":
-            uniform_exp()
-        elif exp_name == "all":
-            poisson_exp()
-            uniform_exp()
-            normal_exp()
-            lognormal_exp()
+        dist_name = sys.argv[1]
+        if len(sys.argv) > 1:
+            exp_name = sys.argv[2]
         else:
-            print("unknown distribution name provided (%s), exiting..."% (exp_name))
+            exp_name = "all"
+
+        if dist_name == "poisson":
+            poisson_exp(exp_name)
+        elif dist_name == "lognormal":
+            lognormal_exp(exp_name)
+        elif dist_name == "normal":
+            normal_exp(exp_name)
+        elif dist_name == "uniform":
+            uniform_exp(exp_name)
+        elif dist_name == "all":
+            poisson_exp(exp_name)
+            uniform_exp(exp_name)
+            normal_exp(exp_name)
+            lognormal_exp(exp_name)
+        else:
+            print("unknown distribution name provided (%s), exiting..." % (dist_name))
             exit(1)
         update_p_str_json()
 
