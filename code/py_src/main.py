@@ -415,7 +415,11 @@ def update_p_str_json():
         # print(old)
         # print(param_str_dict)
         for key, value in param_str_dict.items():
-            if (key not in old) or (sorted(value) != sorted(old[key])):
+            if (
+                (key not in old)
+                or (sorted(value) != sorted(old[key]))
+                and (len(value) > len(old[key]))
+            ):
                 old[key] = value
 
         with open(json_fname, "w") as json_file:
