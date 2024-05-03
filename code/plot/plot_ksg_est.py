@@ -33,11 +33,11 @@ colors = [
 ]
 
 func_names = [
-    # "max",
-    # "var_mu",
-    # "median",
+    "max",
+    "var_mu",
+    "median",
     "median_min",
-    # "var",
+    "var",
 ]
 
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
@@ -186,10 +186,10 @@ def plot_discrete(fname, dist, param_str):
             if (int(numSpec) % 2 == oe_key) and (
                 fname == "median" or fname == "median_min"
             ):
-                print(numSpec)
+                # print(numSpec)
                 plotfn()
             elif fname != "median" and fname != "median_min":
-                print("else")
+                # print("else")
                 plotfn()
 
     legend1 = plt.legend(
@@ -404,6 +404,7 @@ def main():
     for dname in disc_dists:
         for func in func_names:
             for p_str in param_strs_dict[dname]:
+                print(dname, p_str)
                 plot_discrete(func, dname, p_str)
 
 

@@ -142,29 +142,30 @@ def calculateTargetInitEntropy(dist_params):
     if isinstance(dist_params, uniform_real_params):
         return np.log2(float(dist_params.b) - float(dist_params.a - 1))
 
-    if isinstance(dist_params, uniform_int_params):
+    elif isinstance(dist_params, uniform_int_params):
         return np.log2(float(dist_params.b) - float(dist_params.a))
 
-    if isinstance(dist_params, normal_params):
+    elif isinstance(dist_params, normal_params):
         return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.sigma)
 
-    if isinstance(dist_params, poisson_params):
-        if dist_params.lam > 10:
-            return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.lam)
-        else:
-            accum = 0.0
-            for i in range(0, 10 * dist_params.lam):
-                tmp = poisson.pmf(i, dist_params.lam)
-                accum += xlogy(tmp, tmp)
-            return (-1.0) * accum
+    elif isinstance(dist_params, poisson_params):
+        # if dist_params.lam > 10:
+        return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.lam)
+    # else:
+    #     accum = 0.0
+    #     for i in range(0, 100 * int(dist_params.lam)):
+    #         tmp = poisson.pmf(i, dist_params.lam)
+    #         accum += xlogy(tmp, tmp)
+    #     return (-1.0) * accum
 
-    if isinstance(dist_params, lognormal_params):
+    elif isinstance(dist_params, lognormal_params):
         return (
             dist_params.mu + 0.5 * np.log(2.0 * np.pi * np.e * dist_params.sigma)
         ) / np.log(2.0)
 
-    print("unknown distribution encountered: %s" % (dist_params.t))
-    exit()
+    else:
+        print("unknown distribution encountered: %s" % (dist_params.t))
+        exit()
 
 
 # used for discrete and continuous data
@@ -297,7 +298,6 @@ def batch_ex_normal(fn: func):
 def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
     sigma_vals = np.array([1.0, 2.0, 4.0])
-    # sigma_vals = np.array([])
     mu_vals = np.full((sigma_vals.size), 0.0)
     sigma_vals = np.append(sigma_vals, 0.145542)
     mu_vals = np.append(mu_vals, 1.6702)
