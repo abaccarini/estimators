@@ -42,8 +42,12 @@ def var_mu(x):
 
 
 def median_min(x):
-    np.sort(x)
-    return x[int(x.size / 2)]
+    x = np.sort(x)
+    return x[int(x.size / 2) -1]
+
+# a = [1,4,5,3,2,6]
+# a = np.array(a)
+# print(median_min(a))
 
 
 fn_max = func(np.max, "max")
