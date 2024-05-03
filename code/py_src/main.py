@@ -43,12 +43,20 @@ def var_mu(x):
 
 def median_min(x):
     x = np.sort(x)
-    return x[int(x.size / 2) - 1]
+    print(x)
+    if x.size % 2 == 0:
+        return x[int(x.size / 2) - 1]
+    else:
+        return x[int(x.size / 2)]
 
 
-# a = [1,4,5,3,2,6]
-# a = np.array(a)
-# print(median_min(a))
+a = [1, 4, 5, 3, 2, 6]
+a = np.array(a)
+print(median_min(a))
+
+a = [1, 4, 5, 3, 2]
+a = np.array(a)
+print(median_min(a))
 
 
 fn_max = func(np.max, "max")
@@ -149,14 +157,7 @@ def calculateTargetInitEntropy(dist_params):
         return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.sigma)
 
     elif isinstance(dist_params, poisson_params):
-        # if dist_params.lam > 10:
         return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.lam)
-    # else:
-    #     accum = 0.0
-    #     for i in range(0, 100 * int(dist_params.lam)):
-    #         tmp = poisson.pmf(i, dist_params.lam)
-    #         accum += xlogy(tmp, tmp)
-    #     return (-1.0) * accum
 
     elif isinstance(dist_params, lognormal_params):
         return (
