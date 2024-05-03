@@ -43,20 +43,14 @@ def var_mu(x):
 
 def median_min(x):
     x = np.sort(x)
-    print(x)
-    if x.size % 2 == 0:
-        return x[int(x.size / 2) - 1]
-    else:
-        return x[int(x.size / 2)]
+    return x[int(x.size / 2)]
 
 
 a = [1, 4, 5, 3, 2, 6]
 a = np.array(a)
-print(median_min(a))
 
 a = [1, 4, 5, 3, 2]
 a = np.array(a)
-print(median_min(a))
 
 
 fn_max = func(np.max, "max")
@@ -302,8 +296,8 @@ def batch_ex_lognormal(fn: func):
     mu_vals = np.full((sigma_vals.size), 0.0)
     sigma_vals = np.append(sigma_vals, 0.145542)
     mu_vals = np.append(mu_vals, 1.6702)
-    print(sigma_vals)
-    print(mu_vals)
+    # print(sigma_vals)
+    # print(mu_vals)
 
     # sigma_vals = np.array([1.0])
     p_str_list = []
@@ -444,7 +438,7 @@ if __name__ == "__main__":
         print("thread_count ", thread_count)
         print("step_size ", step_size)
         dist_name = sys.argv[1]
-        if len(sys.argv) > 1:
+        if len(sys.argv) > 2:
             exp_name = sys.argv[2]
         else:
             exp_name = "all"
