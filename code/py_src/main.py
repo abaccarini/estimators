@@ -43,7 +43,8 @@ def var_mu(x):
 
 def median_min(x):
     x = np.sort(x)
-    return x[int(x.size / 2) -1]
+    return x[int(x.size / 2) - 1]
+
 
 # a = [1,4,5,3,2,6]
 # a = np.array(a)
@@ -295,8 +296,8 @@ def batch_ex_normal(fn: func):
 
 def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
-    # sigma_vals = np.array([1.0, 2.0, 4.0, 8.0])
-    sigma_vals = np.array([])
+    sigma_vals = np.array([1.0, 2.0, 4.0])
+    # sigma_vals = np.array([])
     mu_vals = np.full((sigma_vals.size), 0.0)
     sigma_vals = np.append(sigma_vals, 0.145542)
     mu_vals = np.append(mu_vals, 1.6702)

@@ -110,6 +110,7 @@ oe_str = {0: "even", 1: "odd"}
 global oe_key
 oe_key = 0
 
+
 def plot_discrete(fname, dist, param_str):
     verify_args(fname, dist)
 
@@ -153,18 +154,18 @@ def plot_discrete(fname, dist, param_str):
     cc = itertools.cycle(colors)
     alph = 0.5
 
-
     t_init = json_data["target_init_entropy"]
     # print("bounds : ", lower_bound, upper_bound)
     # print(json_data["awae_data"])
     # return
-    if fname == 'median' or fname == "median_min":
+    if fname == "median" or fname == "median_min":
         max_numspec = 11
-        
+
     for numSpec, val in json_data["awae_data"].items():
+
         def plotfn():
             c = next(cc)
-                # for jj, vv in val.items():
+            # for jj, vv in val.items():
             #     print(jj, vv)
             x_A = np.array([np.array(xi) for xi, vv in val.items()])
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
@@ -180,11 +181,14 @@ def plot_discrete(fname, dist, param_str):
                 label=label,
             )
             plot_lines.append(l2)
+
         if int(numSpec) < max_numspec:
-            if ( int(numSpec) % 2 == oe_key ) and (fname == 'median' or fname == 'median_min'):
+            if (int(numSpec) % 2 == oe_key) and (
+                fname == "median" or fname == "median_min"
+            ):
                 print(numSpec)
                 plotfn()
-            elif (fname != 'median' and fname != 'median_min'):
+            elif fname != "median" and fname != "median_min":
                 print("else")
                 plotfn()
 
@@ -239,12 +243,12 @@ def plot_discrete(fname, dist, param_str):
 
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
-    if  (fname == 'median' or fname == 'median_min'):
-       plt.savefig(
-        out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
-        # out_path + "/" + param_str + "_discrete_leakage.pdf",
-        bbox_inches="tight",
-    ) 
+    if fname == "median" or fname == "median_min":
+        plt.savefig(
+            out_path + "/" + param_str + "_" + oe_str[oe_key] + "_discrete_leakage.pdf",
+            # out_path + "/" + param_str + "_discrete_leakage.pdf",
+            bbox_inches="tight",
+        )
     else:
         plt.savefig(
             # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
@@ -295,9 +299,9 @@ def plot_cont(fname, dist, param_str):
             # print(min(x_A))
             # print(max(x_A))
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-            
-            yhat = savgol_filter(awae, 51, 3) # window size 51, polynomial order 3
-            
+
+            yhat = savgol_filter(awae, 51, 3)  # window size 51, polynomial order 3
+
             # awae = np.array([np.array(xi) for xi in val])[:, 1]  # col slice, awaes
             label = r"$\lvert S\rvert\ = %s$" % numSpec
             (l2,) = plt.plot(
@@ -382,13 +386,13 @@ def main():
         "lognormal",
     ]
 
-    # for dname in cont_dists:
-    #     for func in func_names:
-    #         for p_str in param_strs_dict[dname]:
-    #             print(dname, p_str)
-    #             plot_cont(func, dname, p_str)
     global oe_key
     oe_key = 0
+    for dname in cont_dists:
+        for func in func_names:
+            for p_str in param_strs_dict[dname]:
+                print(dname, p_str)
+                plot_cont(func, dname, p_str)
 
     for dname in disc_dists:
         for func in func_names:
@@ -401,6 +405,8 @@ def main():
         for func in func_names:
             for p_str in param_strs_dict[dname]:
                 plot_discrete(func, dname, p_str)
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         main()
