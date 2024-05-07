@@ -86,7 +86,7 @@ class sampleData:
         if self.params.t == "normal":
             return np.reshape(
                 np.random.normal(self.params.mu, self.params.sigma, self.N * numP),
-                (self.N, numP),
+                (self.N, numP), #this is UNSQUARED sigma
             )
         if self.params.t == "lognormal":
             return np.reshape(
@@ -149,7 +149,7 @@ def calculateTargetInitEntropy(dist_params):
         return np.log2(float(dist_params.b) - float(dist_params.a))
 
     elif isinstance(dist_params, normal_params):
-        return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.sigma)
+        return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.sigma * dist_params.sigma)
 
     elif isinstance(dist_params, poisson_params):
         return 0.5 * np.log2(2.0 * np.pi * np.e * dist_params.lam)
@@ -225,7 +225,7 @@ def batch_ex_uniform_int(fn: func):
 def batch_ex_poisson(fn: func):
 
     dist_name = "poisson"
-    lam_vals = np.array([2, 4, 8])
+    lam_vals = np.array([1, 2, 4, 8])
     x_A_min = 0
     p_str_list = []
     for lam in lam_vals:
@@ -267,7 +267,7 @@ def batch_ex_normal(fn: func):
 
     dist_name = "normal"
     mu = 0.0
-    sigma_vals = np.array([1.0, 2.0, 4.0])
+    sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0,  np.sqrt(8.0), 4.0])
 
     p_str_list = []
     for sigma in sigma_vals:
@@ -311,9 +311,9 @@ def batch_ex_normal(fn: func):
 
 def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
-    sigma_vals = np.array([1.0, 2.0, 4.0])
+    sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0,  np.sqrt(8.0), 4.0])
     mu_vals = np.full((sigma_vals.size), 0.0)
-    sigma_vals = np.append(sigma_vals, 0.145542)
+    sigma_vals = np.append(sigma_vals, 0.3815)
     mu_vals = np.append(mu_vals, 1.6702)
     # print(sigma_vals)
     # print(mu_vals)
