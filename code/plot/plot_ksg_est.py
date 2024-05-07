@@ -25,7 +25,6 @@ colors = [
     "magenta",
     "darkorange",
     "black",
-    "red",
     "blue",
     "darkgreen",
     "magenta",
@@ -104,6 +103,14 @@ def getParams(dist, param_str):
         raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
         bounds = raw_str.split(",")
         return (int(bounds[0]), int(bounds[1]))
+    if dist == "lognormal":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        bounds = raw_str.split(",")
+        return (float(bounds[0]), float(bounds[1]))
+    if dist == "normal":
+        raw_str = param_str[param_str.find("(") + 1 : param_str.find(")")]
+        bounds = raw_str.split(",")
+        return (float(bounds[0]), float(bounds[1]))
 
 
 oe_str = {0: "even", 1: "odd"}
@@ -162,14 +169,10 @@ def plot_discrete(fname, dist, param_str):
         max_numspec = 11
 
     for numSpec, val in json_data["awae_data"].items():
-
         def plotfn():
             c = next(cc)
-            # for jj, vv in val.items():
-            #     print(jj, vv)
             x_A = np.array([np.array(xi) for xi, vv in val.items()])
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-            # awae = np.array([np.array(xi) for xi in val])[:, 1]  # col slice, awaes
             label = r"$\lvert S\rvert\ = %s$" % numSpec
             (l2,) = plt.plot(
                 x_A[lower_bound:upper_bound],
@@ -186,10 +189,8 @@ def plot_discrete(fname, dist, param_str):
             if (int(numSpec) % 2 == oe_key) and (
                 fname == "median" or fname == "median_min"
             ):
-                # print(numSpec)
                 plotfn()
             elif fname != "median" and fname != "median_min":
-                # print("else")
                 plotfn()
 
     legend1 = plt.legend(
@@ -262,11 +263,8 @@ def plot_cont(fname, dist, param_str):
     verify_args(fname, dist)
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
-    # print(files)
     file = [f for f in files if Path(f).stem == param_str][0]
-    # print(file)
     lower_bound, upper_bound = getBounds(dist, param_str)
-    # print(lower_bound, upper_bound)
     max_numspec = 6
     fig, ax = plt.subplots()
     plt.ylabel(r"Entropy (bits)")
@@ -282,32 +280,48 @@ def plot_cont(fname, dist, param_str):
     plot_lines = []
     cc = itertools.cycle(colors)
     alph = 0.5
-
     t_init = json_data["target_init_entropy"]
+    if fname == "median" or fname == "median_min":
+        max_numspec = 11
 
+    ax2 = ax.twiny()
+    if dist == "normal":
+        mu, sigma = getParams(dist, param_str)
+        ax2.axvline(mu, linestyle="--", alpha=0.5, color="black")
+        sig_line = sigma
+        ax2.axvline(sig_line, linestyle="--", alpha=0.5, color="black")
+        ax2.axvline((-1.0)*sig_line, linestyle="--", alpha=0.5, color="black")
+        ax2.set_xticks([mu])
+        ax2.set_xticklabels([r"mean $= %.2f$" % mu], rotation=0, color="black")
+    if dist == "lognormal":
+        mu, sigma = getParams(dist, param_str)
+        mean = np.exp(mu + (sigma * sigma)/ 2)
+        ax2.axvline(mean, linestyle="--", alpha=0.5, color="black")
+        ax2.set_xticks([mean])
+        ax2.set_xticklabels([r"mean $= %.2f$" % mean], rotation=0, color="black")
+        
+        
     for numSpec, val in json_data["awae_data"].items():
-        if int(numSpec) < max_numspec:
-            # if numSpec % 2 == oe_key:
-
+        def plotfn(upper_bound):
             c = next(cc)
-            # for jj, vv in val.items():
-            #     print(jj, vv)
             x_A = np.array([float(xi) for xi, vv in val.items()])
             if max(x_A) > upper_bound:
                 upper_bound = max(x_A)
-            # print(x_A)
-            # print(min(x_A))
-            # print(max(x_A))
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-
             yhat = savgol_filter(awae, 51, 3)  # window size 51, polynomial order 3
-
-            # awae = np.array([np.array(xi) for xi in val])[:, 1]  # col slice, awaes
             label = r"$\lvert S\rvert\ = %s$" % numSpec
             (l2,) = plt.plot(
                 x_A, yhat, marker="", color=c, alpha=alph, linestyle="-", label=label
             )
             plot_lines.append(l2)
+
+        if int(numSpec) < max_numspec:
+            if (int(numSpec) % 2 == oe_key) and (
+                fname == "median" or fname == "median_min"
+            ):
+                plotfn(upper_bound)
+            elif fname != "median" and fname != "median_min":
+                plotfn(upper_bound)
 
     legend1 = plt.legend(
         handles=plot_lines, loc="best", bbox_to_anchor=(1.32, 0.7), fontsize=14
@@ -362,11 +376,16 @@ def plot_cont(fname, dist, param_str):
 
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
-    plt.savefig(
-        # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
-        out_path + "/" + param_str + "_cont_leakage.pdf",
-        bbox_inches="tight",
-    )
+    if fname == "median" or fname == "median_min":
+        plt.savefig(
+            out_path + "/" + param_str + "_" + oe_str[oe_key] + "_cont_leakage.pdf",
+            bbox_inches="tight",
+        )
+    else:
+        plt.savefig(
+            out_path + "/" + param_str + "_cont_leakage.pdf",
+            bbox_inches="tight",
+        )
     plt.close("all")
 
 
@@ -394,18 +413,23 @@ def main():
                 print(dname, p_str)
                 plot_cont(func, dname, p_str)
 
-    for dname in disc_dists:
-        for func in func_names:
-            for p_str in param_strs_dict[dname]:
-                plot_discrete(func, dname, p_str)
+    # for dname in disc_dists:
+    #     for func in func_names:
+    #         for p_str in param_strs_dict[dname]:
+    #             print(dname, p_str)
+    #             plot_discrete(func, dname, p_str)
 
-    oe_key = 1
-
-    for dname in disc_dists:
-        for func in func_names:
-            for p_str in param_strs_dict[dname]:
-                print(dname, p_str)
-                plot_discrete(func, dname, p_str)
+    # oe_key = 1
+    # for dname in cont_dists:
+    #     for func in func_names:
+    #         for p_str in param_strs_dict[dname]:
+    #             print(dname, p_str)
+    #             plot_cont(func, dname, p_str)
+    # for dname in disc_dists:
+    #     for func in func_names:
+    #         for p_str in param_strs_dict[dname]:
+    #             print(dname, p_str)
+    #             plot_discrete(func, dname, p_str)
 
 
 if __name__ == "__main__":
