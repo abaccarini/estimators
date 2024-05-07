@@ -156,7 +156,7 @@ def calculateTargetInitEntropy(dist_params):
 
     elif isinstance(dist_params, lognormal_params):
         return (
-            dist_params.mu + 0.5 * np.log(2.0 * np.pi * np.e * dist_params.sigma)
+            dist_params.mu + 0.5 * np.log(2.0 * np.pi * np.e * dist_params.sigma * dist_params.sigma )
         ) / np.log(2.0)
 
     else:
