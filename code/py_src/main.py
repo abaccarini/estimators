@@ -177,7 +177,7 @@ def evaluate_estimator(params, numSpecs, xA, fn):
 def evaluate_estimator_no_attacker(params, numSpecs, fn):
     MI = 0.0
     for i in range(numIterations):
-        s = sampleData(params, N, numT, [], numSpecs,  fn)
+        s = sampleData(params, N, numT,  numSpecs, [], fn)
         MI += Mixed_KSG(s.x_T, s.O, k)
     return MI / float(numIterations)
 
