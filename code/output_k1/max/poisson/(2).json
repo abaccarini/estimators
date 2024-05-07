@@ -6,11 +6,11 @@
     "param_str": "(2)"
   },
   "num_samples": 5000,
-  "timestamp": "2024-04-29 16:21:02.427997",
+  "timestamp": "2024-05-03 16:14:43.291061",
   "num_T": 1,
   "num_A": 1,
   "num_iterations": 10,
-  "target_init_entropy": 1.7048826439310045,
+  "target_init_entropy": 2.547095585180641,
   "awae_data": {
     "1": {
       "0": 0.9710309235066834,
