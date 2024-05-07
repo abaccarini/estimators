@@ -115,7 +115,7 @@ class sampleData:
 
 
 def write_json(
-    numIterations, params, N, numT, numA, target_init_entropy, MI_data, fn: func
+    numIterations, params, N, numT, numA, target_init_entropy, MI_data, MI_data_no_attacker, fn: func
 ):
     dt = datetime.now()
     data = {
@@ -128,6 +128,7 @@ def write_json(
         "num_iterations": numIterations,
         "target_init_entropy": target_init_entropy,
         "awae_data": MI_data,
+        "leakage_no_attacker": MI_data_no_attacker,
     }
     # print(data)
     dir_path = output_path + str(fn.fn_name) + "/" + str(params.t) + "/"
@@ -172,6 +173,14 @@ def evaluate_estimator(params, numSpecs, xA, fn):
         MI += Mixed_KSG(s.x_T, s.O, k)
     return (xA, MI / float(numIterations))
 
+# used to calculate the information disclosure if the attacker doesn't participate
+def evaluate_estimator_no_attacker(params, numSpecs, fn):
+    MI = 0.0
+    for i in range(numIterations):
+        s = sampleData(params, N, numT, [], numSpecs,  fn)
+        MI += Mixed_KSG(s.x_T, s.O, k)
+    return MI / float(numIterations)
+
 
 def batch_ex_uniform_int(fn: func):
 
@@ -182,6 +191,7 @@ def batch_ex_uniform_int(fn: func):
     p_str_list = []
     for n in N_vals:
         spec_to_xA_to_MI = {}
+        leakage_without_attacker = {}
         params = uniform_int_params(0, n)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         x_A_max = n
@@ -195,6 +205,8 @@ def batch_ex_uniform_int(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
+
             # print(xA_to_MI)
         write_json(
             numIterations,
@@ -204,6 +216,7 @@ def batch_ex_uniform_int(fn: func):
             numA,
             target_init_entropy,
             spec_to_xA_to_MI,
+            leakage_without_attacker,
             fn,
         )
     param_str_dict[dist_name] = p_str_list
@@ -217,6 +230,7 @@ def batch_ex_poisson(fn: func):
     p_str_list = []
     for lam in lam_vals:
         spec_to_xA_to_MI = {}
+        leakage_without_attacker = {}
         params = poisson_params(lam)  # generates data from 0, 3-1
         p_str_list.append(params.p_str)
         target_init_entropy = calculateTargetInitEntropy(params)
@@ -233,6 +247,7 @@ def batch_ex_poisson(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
 
         write_json(
             numIterations,
@@ -242,6 +257,7 @@ def batch_ex_poisson(fn: func):
             numA,
             target_init_entropy,
             spec_to_xA_to_MI,
+            leakage_without_attacker,
             fn,
         )
     param_str_dict[dist_name] = p_str_list
@@ -256,6 +272,7 @@ def batch_ex_normal(fn: func):
     p_str_list = []
     for sigma in sigma_vals:
         spec_to_xA_to_MI = {}
+        leakage_without_attacker = {}
         params = normal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         p_str_list.append(params.p_str)
@@ -276,6 +293,7 @@ def batch_ex_normal(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
 
         write_json(
             numIterations,
@@ -285,6 +303,7 @@ def batch_ex_normal(fn: func):
             numA,
             target_init_entropy,
             spec_to_xA_to_MI,
+            leakage_without_attacker,
             fn,
         )
     param_str_dict[dist_name] = p_str_list
@@ -305,6 +324,8 @@ def batch_ex_lognormal(fn: func):
     x_A_min = 0.00001
     for sigma, mu in zip(sigma_vals, mu_vals):
         spec_to_xA_to_MI = {}
+        leakage_without_attacker = {}
+
         params = lognormal_params(mu, sigma)  # generates data from 0, 3-1
         target_init_entropy = calculateTargetInitEntropy(params)
         p_str_list.append(params.p_str)
@@ -328,6 +349,7 @@ def batch_ex_lognormal(fn: func):
             # print(results)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
 
         write_json(
             numIterations,
@@ -337,6 +359,7 @@ def batch_ex_lognormal(fn: func):
             numA,
             target_init_entropy,
             spec_to_xA_to_MI,
+            leakage_without_attacker,
             fn,
         )
     param_str_dict[dist_name] = p_str_list
