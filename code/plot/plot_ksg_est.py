@@ -17,7 +17,7 @@ plt.rcParams.update(
         "text.latex.preamble": r"\usepackage{amsfonts,amsmath,amssymb,sfmath,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
     }
 )
-
+np.seterr(divide="ignore", invalid="ignore")
 
 colors = [
     "red",
@@ -65,6 +65,8 @@ def function_str(fname):
     if fname == "min":
         return r"$f_{\min}(\vec{x}) = \min_{i} x_i$"
     if fname == "median":
+        return r"$f_{\text{median}}(\vec{x}) = x_{\floor{(n +1)/2}}$"
+    if fname == "median_min":
         return r"$f_{\text{median}}(\vec{x}) = x_{\floor{(n +1)/2}}$"
     if fname == "var":
         return r"$f_{\sigma^2}(\vec{x}) = \frac{1}{n}\sum_i (x_i - \mu)^2 $"
@@ -148,7 +150,7 @@ def plot_discrete(fname, dist, param_str):
         stdev = np.sqrt(float(mean))
         # ax2.axvline(lam, linestyle="--", alpha=0.5, color="black")
         xtick = (
-            [mean + (-1.0) * stdev * i for i in range(1, tick_upper)]
+            [mean - stdev * i for i in (range(1, tick_upper))]
             + [mean]
             + [mean + stdev * i for i in range(1, tick_upper)]
         )
@@ -177,7 +179,7 @@ def plot_discrete(fname, dist, param_str):
         mean = (a + b) / 2.0
         stdev = np.sqrt(((b - a + 1.0) * (b - a + 1.0) - 1.0) / 12.0)
         xtick = (
-            [mean - stdev * i for i in range(1, tick_upper)]
+            [mean - stdev * i for i in (range(1, tick_upper))]
             + [mean]
             + [mean + stdev * i for i in range(1, tick_upper)]
         )
@@ -288,12 +290,13 @@ def plot_discrete(fname, dist, param_str):
             label=r"$H(X_T \mid O)$",
         )
     ]
-    legend2 = plt.legend(
-        handles=hline_legened, loc="best", 
-        # bbox_to_anchor=(1.3, 1.0),
-        fontsize=14
-    )
-    plt.gca().add_artist(legend2)
+    # legend2 = plt.legend(
+    #     handles=hline_legened,
+    #     loc="best",
+    #     # bbox_to_anchor=(1.3, 1.0),
+    #     fontsize=14,
+    # )
+    # plt.gca().add_artist(legend2)
 
     plt.text(
         0.5,
@@ -305,15 +308,15 @@ def plot_discrete(fname, dist, param_str):
         bbox={"facecolor": "white", "alpha": 0.95, "pad": 0, "edgecolor": "white"},
     )
 
-    plt.text(
-        0.5,
-        -0.25,
-        func_str,
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
-    )
+    # plt.text(
+    #     0.5,
+    #     -0.25,
+    #     func_str,
+    #     transform=ax.transAxes,
+    #     ha="center",
+    #     va="center",
+    #     bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
+    # )
 
     out_path = fig_dir + fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
@@ -337,6 +340,7 @@ def plot_cont(fname, dist, param_str):
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
     file = [f for f in files if Path(f).stem == param_str][0]
+    global upper_bound
     lower_bound, upper_bound = getBounds(dist, param_str)
     max_numspec = 6
     fig, ax = plt.subplots()
@@ -364,11 +368,42 @@ def plot_cont(fname, dist, param_str):
     if dist == "normal":
         mu, sigma = getParams(dist, param_str)
         tick_upper = 4
+
         xtick = (
-            [(-1.0) * sigma * i for i in range(1, tick_upper)]
+            [mu - sigma * i for i in (range(1, tick_upper))]
             + [mu]
-            + [sigma * i for i in range(1, tick_upper)]
+            + [mu + sigma * i for i in (range(1, tick_upper))]
         )
+        xlabels = (
+            [
+                r"$\mu {-} %s \sigma$" % (i if i > 1 else "")
+                for i in (range(1, tick_upper))
+            ]
+            + [r"$\mu$"]
+            + [
+                r"$\mu {+} %s \sigma$" % (i if i > 1 else "")
+                for i in range(1, tick_upper)
+            ]
+        )
+        ax2.set_xticks(xtick)
+        ax2.set_xticklabels(xlabels)
+        plt.xticks(fontsize=14, rotation=45)
+
+    if dist == "lognormal":
+        mu, sigma = getParams(dist, param_str)
+        mean = np.exp(mu + (sigma * sigma) / 2.0)
+        sig = np.sqrt(
+            (np.exp((sigma * sigma)) - 1.0) * (np.exp(2.0 * mu + sigma * sigma))
+        )
+        tick_upper = 4
+        xtick = (
+            [mean - sig * i for i in (range(1, tick_upper))]
+            + [mean]
+            + [mean + sig * i for i in (range(1, tick_upper))]
+        )
+        # print(mean)
+        # print(sig)
+        # print(xtick)
         xlabels = (
             [
                 r"$\mu {-} %s \sigma$" % (i if i > 1 else "")
@@ -384,28 +419,24 @@ def plot_cont(fname, dist, param_str):
         ax2.set_xticklabels(xlabels)
         plt.xticks(fontsize=14, rotation=45)
 
-    if dist == "lognormal":
-        # ax2 = ax.twiny()
-        mu, sigma = getParams(dist, param_str)
-        mean = np.exp(mu + (sigma * sigma) / 2)
-        # ax2.axvline(mean, linestyle="--", alpha=0.5, color="black")
-        ax2.set_xticks([mean])
-        ax2.set_xticklabels([r"mean $= %.2f$" % mean], rotation=0, color="black")
     leakage_no_A = json_data["leakage_no_attacker"]
 
     for numSpec, val in json_data["awae_data"].items():
         leakage_val = leakage_no_A[numSpec]
 
-        def plotfn(upper_bound, col=None):
+        def plotfn(ubound, col=None):
             if col is None:
                 c = next(cc)
             else:
                 c = col
             x_A = np.array([float(xi) for xi, vv in val.items()])
-            if max(x_A) > upper_bound:
-                upper_bound = max(x_A)
+            if max(x_A) > ubound:
+                ubound = max(x_A)
+                global upper_bound
+                upper_bound = ubound
+
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-            # awae = [x for x in awae if x > lower_bound and x < upper_bound]
+            # awae = [x for x in awae if x > lower_bound and x < ubound]
             yhat = savgol_filter(awae, 51, 3)  # window size 51, polynomial order 3
             label = r"$\lvert S\rvert\ = %s$" % numSpec
             (l2,) = plt.plot(
@@ -415,7 +446,7 @@ def plot_cont(fname, dist, param_str):
             ax.hlines(
                 y=t_init - leakage_val,
                 xmin=lower_bound,
-                xmax=(upper_bound),
+                xmax=(ubound),
                 linewidth=2,
                 color=c,
                 linestyle="--",
@@ -438,15 +469,15 @@ def plot_cont(fname, dist, param_str):
             elif fname != "median" and fname != "median_min":
                 plotfn(upper_bound)
 
-    legend1 = plt.legend(
-        handles=plot_lines,
-        loc="best",
-        bbox_to_anchor=(1.32, 0.7),
-        fontsize=14,
-        # handles=plot_lines,
-        # loc="best",
-        # fontsize=14,
-    )
+    # legend1 = plt.legend(
+    #     handles=plot_lines,
+    #     loc="best",
+    #     bbox_to_anchor=(1.32, 0.7),
+    #     fontsize=14,
+    #     # handles=plot_lines,
+    #     # loc="best",
+    #     # fontsize=14,
+    # )
     # plt.gca().add_artist(legend1)
 
     hline_legened = [
@@ -460,13 +491,12 @@ def plot_cont(fname, dist, param_str):
             label=r"$H(X_T \mid O)$",
         )
     ]
-    legend2 = plt.legend(
-        handles=hline_legened, loc="best", 
-        # bbox_to_anchor=(1.3, 1.0),
-        fontsize=14
-    )
-    plt.gca().add_artist(legend2)
-
+    # legend2 = plt.legend(
+    #     handles=hline_legened,
+    #     loc="best",
+    #     fontsize=14,
+    # )
+    # plt.gca().add_artist(legend2)
 
     plt.xticks(
         np.arange(lower_bound, upper_bound, 1), minor=True
@@ -496,17 +526,16 @@ def plot_cont(fname, dist, param_str):
         bbox={"facecolor": "white", "alpha": 0.95, "pad": 0, "edgecolor": "white"},
     )
 
-    # plt.gca().add_artist(legend2)
 
-    plt.text(
-        0.5,
-        -0.25,
-        func_str,
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
-    )
+    # plt.text(
+    #     0.5,
+    #     -0.25,
+    #     func_str,
+    #     transform=ax.transAxes,
+    #     ha="center",
+    #     va="center",
+    #     bbox={"facecolor": "white", "alpha": 0.9, "pad": 3, "edgecolor": "black"},
+    # )
 
     plt.tick_params(which="minor", length=0)  # remove minor tick lines
 
@@ -522,56 +551,83 @@ def plot_cont(fname, dist, param_str):
             out_path + "/" + param_str + "_cont_leakage.pdf",
             bbox_inches="tight",
         )
-        all_specs_legend = [
-            Line2D(
-                [0],
-                [0],
-                color=colors[int(numSpec) - 1],
-                marker="",
-                alpha=1.0,
-                linestyle="-",
-                label=r"$\lvert S\rvert\ = %s$" % numSpec,
-            )
-            for numSpec in range(1, 11)
-        ]
+    
+    plt.close("all")
 
-        # fig, ax2 = plt.subplots()
-        # plt.gca().add_artist(legend1)
-        legend1 = plt.legend(
-            handles=all_specs_legend,
-            loc="center right",
-            bbox_to_anchor=(1.0, 0.3),
-            prop={"size": 16},
+
+def generateLegend():
+    figl, axl = plt.subplots()
+    all_specs_legend = [
+        Line2D(
+            [0],
+            [0],
+            color=colors[int(numSpec) - 1],
+            marker="",
+            alpha=1.0,
+            linestyle="-",
+            label=r"$\lvert S\rvert\ = %s$" % numSpec,
         )
-        plt.autoscale(enable=True, axis="y", tight=True)
-        figl2, axl2 = plt.subplots(figsize=(0, 0))
-        axl2.axis(False)
-
-        def flip(items, ncol):
-            return itertools.chain(*[items[i::ncol] for i in range(ncol)])
-
-        reorder = lambda l, nc: sum((l[i::nc] for i in range(nc)), [])
-
-        axl2.legend(
-            handles=reorder(all_specs_legend, 5),
-            loc="center",
-            bbox_to_anchor=(0.5, 0.5),
-            columnspacing=0.5,
-            borderpad=0.5,
-            fontsize="small",
-            ncol=5,
-            handlelength=1,
+        for numSpec in range(1, 11)
+    ]
+    no_a_legend = [
+        Line2D(
+            [0],
+            [0],
+            color="black",
+            marker="",
+            alpha=1.0,
+            linestyle="--",
+            label=r"$H(X_T \mid O)$",
         )
-        figl2.savefig(
-            fig_dir + "legend_text_only" + ".pdf",
-            bbox_inches="tight",
-            pad_inches=0,
-        )
-        plt.close("all")
+    ]
+    # legend1 = plt.legend(
+    #     handles=all_specs_legend,
+    #     loc="center right",
+    #     bbox_to_anchor=(1.0, 0.3),
+    #     prop={"size": 16},
+    # )
+    # plt.autoscale(enable=True, axis="y", tight=True)
+    # # figl2, axl2 = plt.subplots(figsize=(0, 0))
+    plt.axis(False)
+    axl.margins(0,0)
+    figl.subplots_adjust(left=0,right=0.6,bottom=0,top=0.5)
+    leg1 = plt.legend(
+        # handles=reorder(all_specs_legend, 5),
+        handles=all_specs_legend,
+        loc="center",
+        bbox_to_anchor=(0.5, 0.6),
+        # columnspacing=0.5,
+        borderpad=0.5,
+        fontsize="small",
+        ncol=2,
+        # handlelength=1,
+    )
+    plt.gca().add_artist(leg1)
+    # axl2.add_artist(leg1)
+    leg2 = plt.legend(
+        handles=no_a_legend,
+        loc="center",
+        bbox_to_anchor=(0.5, 0.1),
+        borderpad=0.5,
+        fontsize="small",
+        ncol=2,
+        # handlelength=1,
+    )
+    # leg2.remove()
+    # leg1._legend_box._children.append(leg2._legend_handle_box)
+    # leg1._legend_box.stale = True
+
+    plt.savefig(
+        fig_dir + "legend_text_only" + ".pdf",
+        bbox_inches="tight",
+        pad_inches=0,
+    )
+    plt.close("all")
 
 
 def main():
-
+    generateLegend()
+    # return
     json_fname = data_dir + "p_strs.json"
     fname = open(json_fname)
     param_strs_dict = json.load(fname)
@@ -583,7 +639,7 @@ def main():
 
     cont_dists = [
         "normal",
-        # "lognormal",
+        "lognormal",
     ]
 
     global oe_key
