@@ -317,7 +317,8 @@ def batch_ex_normal(fn: func):
 
 def batch_ex_lognormal(fn: func):
     dist_name = "lognormal"
-    sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0,  np.sqrt(8.0), 4.0])
+    # sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0,  np.sqrt(8.0), 4.0])
+    sigma_vals = np.array([])
     mu_vals = np.full((sigma_vals.size), 0.0)
     sigma_vals = np.append(sigma_vals, 0.3815)
     mu_vals = np.append(mu_vals, 1.6702)
@@ -339,7 +340,7 @@ def batch_ex_lognormal(fn: func):
 
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
-        if np.isclose(sigma, 0.145542):  # is functionally zero, and we treat it as such
+        if np.isclose(sigma, 0.3815):  # is functionally zero, and we treat it as such
             x_A_max = 10
         print("x_A_max", x_A_max)
 
