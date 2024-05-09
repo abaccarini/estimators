@@ -40,6 +40,11 @@ class func:
 def var_mu(x):
     return np.asarray([np.var(x), np.mean(x)])
 
+def var_nd(x):
+    mu = np.mean(x)
+    return sum([float(xx - mu)*float(xx - mu) for xx in x])
+
+
 
 def median_min(x):
     x = np.sort(x)
@@ -58,6 +63,7 @@ fn_var = func(np.var, "var")
 fn_median = func(np.median, "median")
 fn_median_min = func(median_min, "median_min")
 fn_var_mu = func(var_mu, "var_mu")
+fn_var_nd = func(var_nd, "var_nd")
 
 
 class sampleData:
@@ -380,6 +386,8 @@ def normal_exp(exp_name):
         batch_ex_normal(fn_median_min)
     if exp_name == "var_mu" or exp_name == "all":
         batch_ex_normal(fn_var_mu)
+    if exp_name == "var_nd" or exp_name == "all":
+        batch_ex_normal(fn_var_nd)
 
 
 def lognormal_exp(exp_name):
@@ -394,7 +402,8 @@ def lognormal_exp(exp_name):
         batch_ex_lognormal(fn_median_min)
     if exp_name == "var_mu" or exp_name == "all":
         batch_ex_lognormal(fn_var_mu)
-
+    if exp_name == "var_nd" or exp_name == "all":
+        batch_ex_lognormal(fn_var_nd)
 
 def uniform_exp(exp_name):
 
@@ -408,6 +417,8 @@ def uniform_exp(exp_name):
         batch_ex_uniform_int(fn_median_min)
     if exp_name == "var_mu" or exp_name == "all":
         batch_ex_uniform_int(fn_var_mu)
+    if exp_name == "var_nd" or exp_name == "all":
+        batch_ex_uniform_int(fn_var_nd)
 
 
 def poisson_exp(exp_name):
@@ -422,6 +433,8 @@ def poisson_exp(exp_name):
         batch_ex_poisson(fn_median_min)
     if exp_name == "var_mu" or exp_name == "all":
         batch_ex_poisson(fn_var_mu)
+    if exp_name == "var_nd" or exp_name == "all":
+        batch_ex_poisson(fn_var_nd)
 
 
 def update_p_str_json():
