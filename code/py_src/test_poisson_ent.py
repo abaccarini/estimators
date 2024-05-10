@@ -1,4 +1,4 @@
-from main import calculateTargetInitEntropy
+from estimator_exp import calculateTargetInitEntropy
 from dist_params import *
 
 lam = 8

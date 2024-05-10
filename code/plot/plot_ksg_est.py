@@ -168,7 +168,7 @@ def plot_discrete(fname, dist, param_str):
 
         ax2.set_xticks(xtick)
         ax2.set_xticklabels(xlabels)
-        plt.xticks(fontsize=14)
+        plt.xticks(fontsize=18)
 
         # ax2.set_xticklabels([r"$\lambda = %s$" % lam], rotation=0, color="red")
     if dist == "uniform_int":
@@ -196,7 +196,7 @@ def plot_discrete(fname, dist, param_str):
         # print("uniform xticks", xtick)
         ax2.set_xticks(xtick)
         ax2.set_xticklabels(xlabels)
-        plt.xticks(fontsize=14)
+        plt.xticks(fontsize=18)
 
     func_str = function_str(fname)
 
@@ -241,6 +241,7 @@ def plot_discrete(fname, dist, param_str):
                 xmin=lower_bound,
                 xmax=(upper_bound) - 1,
                 linewidth=2,
+                alpha=alph,
                 color=c,
                 linestyle="--",
             )
@@ -257,7 +258,7 @@ def plot_discrete(fname, dist, param_str):
                 plotfn()
 
     # legend1 = plt.legend(
-    #     handles=plot_lines, loc="best", bbox_to_anchor=(1.32, 0.7), fontsize=14
+    #     handles=plot_lines, loc="best", bbox_to_anchor=(1.32, 0.7), fontsize=18
     # )
     # plt.gca().add_artist(legend1)
 
@@ -417,7 +418,7 @@ def plot_cont(fname, dist, param_str):
         )
         ax2.set_xticks(xtick)
         ax2.set_xticklabels(xlabels)
-        plt.xticks(fontsize=14, rotation=45)
+        plt.xticks(fontsize=18, rotation=45)
 
     leakage_no_A = json_data["leakage_no_attacker"]
 
@@ -448,6 +449,7 @@ def plot_cont(fname, dist, param_str):
                 xmin=lower_bound,
                 xmax=(ubound),
                 linewidth=2,
+                alpha=alph,
                 color=c,
                 linestyle="--",
             )
@@ -473,10 +475,10 @@ def plot_cont(fname, dist, param_str):
     #     handles=plot_lines,
     #     loc="best",
     #     bbox_to_anchor=(1.32, 0.7),
-    #     fontsize=14,
+    #     fontsize=18,
     #     # handles=plot_lines,
     #     # loc="best",
-    #     # fontsize=14,
+    #     # fontsize=18,
     # )
     # plt.gca().add_artist(legend1)
 
@@ -494,7 +496,7 @@ def plot_cont(fname, dist, param_str):
     # legend2 = plt.legend(
     #     handles=hline_legened,
     #     loc="best",
-    #     fontsize=14,
+    #     fontsize=18,
     # )
     # plt.gca().add_artist(legend2)
 
@@ -557,36 +559,41 @@ def plot_cont(fname, dist, param_str):
 
 def generateLegend():
     figl, axl = plt.subplots()
+    leakage_leg = [
+        Line2D(
+            [0],
+            [0],
+            color="black",
+            marker="",
+            alpha=0.9,
+            linestyle="-",
+            label=r"$H(X_T \mid O, X_A = x_A)$",
+        ),
+         Line2D(
+            [0],
+            [0],
+            color="black",
+            marker="",
+            alpha=0.9,
+            linestyle="--",
+            label=r"$H(X_T \mid O)$",
+        )
+    ]    
     all_specs_legend = [
         Line2D(
             [0],
             [0],
             color=colors[int(numSpec) - 1],
             marker="",
-            alpha=1.0,
+            alpha=0.9,
             linestyle="-",
             label=r"$\lvert S\rvert\ = %s$" % numSpec,
         )
         for numSpec in range(1, 11)
     ]
-    no_a_legend = [
-        Line2D(
-            [0],
-            [0],
-            color="black",
-            marker="",
-            alpha=1.0,
-            linestyle="--",
-            label=r"$H(X_T \mid O)$",
-        )
-    ]
-    # legend1 = plt.legend(
-    #     handles=all_specs_legend,
-    #     loc="center right",
-    #     bbox_to_anchor=(1.0, 0.3),
-    #     prop={"size": 16},
-    # )
-    # plt.autoscale(enable=True, axis="y", tight=True)
+    # no_a_legend = [
+       
+    # ]
     # # figl2, axl2 = plt.subplots(figsize=(0, 0))
     plt.axis(False)
     axl.margins(0,0)
@@ -595,7 +602,7 @@ def generateLegend():
         # handles=reorder(all_specs_legend, 5),
         handles=all_specs_legend,
         loc="center",
-        bbox_to_anchor=(0.5, 0.6),
+        bbox_to_anchor=(0.5, 0.4),
         # columnspacing=0.5,
         borderpad=0.5,
         fontsize="small",
@@ -604,13 +611,23 @@ def generateLegend():
     )
     plt.gca().add_artist(leg1)
     # axl2.add_artist(leg1)
-    leg2 = plt.legend(
-        handles=no_a_legend,
+    # leg2 = plt.legend(
+    #     handles=no_a_legend,
+    #     loc="center",
+    #     bbox_to_anchor=(0.5, 0.1),
+    #     borderpad=0.5,
+    #     fontsize="small",
+    #     ncol=2,
+    #     # handlelength=1,
+    # )
+    # plt.gca().add_artist(leg2)
+    leg3 = plt.legend(
+        handles=leakage_leg,
         loc="center",
-        bbox_to_anchor=(0.5, 0.1),
+        bbox_to_anchor=(0.5, 0.95),
         borderpad=0.5,
         fontsize="small",
-        ncol=2,
+        ncol=1,
         # handlelength=1,
     )
     # leg2.remove()
@@ -627,7 +644,7 @@ def generateLegend():
 
 def main():
     generateLegend()
-    # return
+    return
     json_fname = data_dir + "p_strs.json"
     fname = open(json_fname)
     param_strs_dict = json.load(fname)
