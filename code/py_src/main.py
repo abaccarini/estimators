@@ -341,7 +341,7 @@ def batch_ex_lognormal(fn: func):
         # 0 is undefined for lognormal
         # therefore we start close to zero and go from there
         if np.isclose(sigma, 0.3815):  # is functionally zero, and we treat it as such
-            x_A_max = 10
+            x_A_max = 15
         print("x_A_max", x_A_max)
 
         x_A_range = np.linspace(
