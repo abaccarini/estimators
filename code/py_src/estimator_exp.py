@@ -40,10 +40,10 @@ class func:
 def var_mu(x):
     return np.asarray([np.var(x), np.mean(x)])
 
+
 def var_nd(x):
     mu = np.mean(x)
-    return sum([float(xx - mu)*float(xx - mu) for xx in x])
-
+    return sum([float(xx - mu) * float(xx - mu) for xx in x])
 
 
 def median_min(x):
@@ -51,11 +51,10 @@ def median_min(x):
     return x[int(x.size / 2)]
 
 
-a = [1, 4, 5, 3, 2, 6]
-a = np.array(a)
-
-a = [1, 4, 5, 3, 2]
-a = np.array(a)
+# a = [1, 4, 5, 3, 2, 6]
+# a = np.array(a)
+# a = [1, 4, 5, 3, 2]
+# a = np.array(a)
 
 
 fn_max = func(np.max, "max")
@@ -64,6 +63,7 @@ fn_median = func(np.median, "median")
 fn_median_min = func(median_min, "median_min")
 fn_var_mu = func(var_mu, "var_mu")
 fn_var_nd = func(var_nd, "var_nd")
+fn_stdev = func(np.std, "stdev")
 
 
 class sampleData:
@@ -92,7 +92,7 @@ class sampleData:
         if self.params.t == "normal":
             return np.reshape(
                 np.random.normal(self.params.mu, self.params.sigma, self.N * numP),
-                (self.N, numP), #this is UNSQUARED sigma
+                (self.N, numP),  # this is UNSQUARED sigma
             )
         if self.params.t == "lognormal":
             return np.reshape(
@@ -121,7 +121,15 @@ class sampleData:
 
 
 def write_json(
-    numIterations, params, N, numT, numA, target_init_entropy, MI_data, MI_data_no_attacker, fn: func
+    numIterations,
+    params,
+    N,
+    numT,
+    numA,
+    target_init_entropy,
+    MI_data,
+    MI_data_no_attacker,
+    fn: func,
 ):
     dt = datetime.now()
     data = {
@@ -162,7 +170,8 @@ def calculateTargetInitEntropy(dist_params):
 
     elif isinstance(dist_params, lognormal_params):
         return (
-            dist_params.mu + 0.5 * np.log(2.0 * np.pi * np.e * dist_params.sigma * dist_params.sigma )
+            dist_params.mu
+            + 0.5 * np.log(2.0 * np.pi * np.e * dist_params.sigma * dist_params.sigma)
         ) / np.log(2.0)
 
     else:
@@ -179,11 +188,12 @@ def evaluate_estimator(params, numSpecs, xA, fn):
         MI += Mixed_KSG(s.x_T, s.O, k)
     return (xA, MI / float(numIterations))
 
+
 # used to calculate the information disclosure if the attacker doesn't participate
 def evaluate_estimator_no_attacker(params, numSpecs, fn):
     MI = 0.0
     for i in range(numIterations):
-        s = sampleData(params, N, numT,  numSpecs, [], fn)
+        s = sampleData(params, N, numT, numSpecs, [], fn)
         MI += Mixed_KSG(s.x_T, s.O, k)
     return MI / float(numIterations)
 
@@ -211,7 +221,9 @@ def batch_ex_uniform_int(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
-            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(
+                params, numSpecs, fn
+            )
 
             # print(xA_to_MI)
         write_json(
@@ -253,7 +265,9 @@ def batch_ex_poisson(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
-            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(
+                params, numSpecs, fn
+            )
 
         write_json(
             numIterations,
@@ -273,7 +287,7 @@ def batch_ex_normal(fn: func):
 
     dist_name = "normal"
     mu = 0.0
-    sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0,  np.sqrt(8.0), 4.0])
+    sigma_vals = np.array([1.0, np.sqrt(2.0), 2.0, np.sqrt(8.0), 4.0])
 
     p_str_list = []
     for sigma in sigma_vals:
@@ -299,7 +313,9 @@ def batch_ex_normal(fn: func):
             results = pool.starmap(evaluate_estimator, all_args)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
-            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(
+                params, numSpecs, fn
+            )
 
         write_json(
             numIterations,
@@ -356,7 +372,9 @@ def batch_ex_lognormal(fn: func):
             # print(results)
             xA_to_MI = dict(results)
             spec_to_xA_to_MI[numSpecs] = xA_to_MI
-            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(params, numSpecs, fn)
+            leakage_without_attacker[numSpecs] = evaluate_estimator_no_attacker(
+                params, numSpecs, fn
+            )
 
         write_json(
             numIterations,
@@ -389,6 +407,8 @@ def normal_exp(exp_name):
         batch_ex_normal(fn_var_mu)
     if exp_name == "var_nd" or exp_name == "all":
         batch_ex_normal(fn_var_nd)
+    if exp_name == "stdev" or exp_name == "all":
+        batch_ex_normal(fn_stdev)
 
 
 def lognormal_exp(exp_name):
@@ -405,6 +425,9 @@ def lognormal_exp(exp_name):
         batch_ex_lognormal(fn_var_mu)
     if exp_name == "var_nd" or exp_name == "all":
         batch_ex_lognormal(fn_var_nd)
+    if exp_name == "stdev" or exp_name == "all":
+        batch_ex_lognormal(fn_stdev)
+
 
 def uniform_exp(exp_name):
 
@@ -420,6 +443,8 @@ def uniform_exp(exp_name):
         batch_ex_uniform_int(fn_var_mu)
     if exp_name == "var_nd" or exp_name == "all":
         batch_ex_uniform_int(fn_var_nd)
+    if exp_name == "stdev" or exp_name == "all":
+        batch_ex_uniform_int(fn_stdev)
 
 
 def poisson_exp(exp_name):
@@ -436,6 +461,8 @@ def poisson_exp(exp_name):
         batch_ex_poisson(fn_var_mu)
     if exp_name == "var_nd" or exp_name == "all":
         batch_ex_poisson(fn_var_nd)
+    if exp_name == "stdev" or exp_name == "all":
+        batch_ex_poisson(fn_stdev)
 
 
 def update_p_str_json():
