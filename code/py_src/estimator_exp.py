@@ -56,6 +56,8 @@ def median_min(x):
 # a = [1, 4, 5, 3, 2]
 # a = np.array(a)
 
+def all_fns(x):
+    return np.asarray([np.max(x), median_min(x), np.var(x), np.mean(x)])
 
 fn_max = func(np.max, "max")
 fn_var = func(np.var, "var")
@@ -67,6 +69,8 @@ fn_stdev = func(np.std, "stdev")
 fn_mean = func(np.average, "mean")
 fn_mean_nd = func(np.sum, "mean_nd")
 
+fn_all_fn = func(all_fns, "all_fns")
+
 fn_dict = {
     "max": fn_max,
     "var": fn_var,
@@ -77,6 +81,7 @@ fn_dict = {
     "stdev": fn_stdev,
     "mean": fn_mean,
     "mean_nd": fn_mean_nd,
+    "all_fns": fn_all_fn,
 }
 
 
