@@ -64,6 +64,20 @@ fn_median_min = func(median_min, "median_min")
 fn_var_mu = func(var_mu, "var_mu")
 fn_var_nd = func(var_nd, "var_nd")
 fn_stdev = func(np.std, "stdev")
+fn_mean = func(np.average, "mean")
+fn_mean_nd = func(np.sum, "mean_nd")
+
+fn_dict = {
+    "max": fn_max,
+    "var": fn_var,
+    "median": fn_median,
+    "median_min": fn_median_min,
+    "var_mu": fn_var_mu,
+    "var_nd": fn_var_nd,
+    "stdev": fn_stdev,
+    "mean": fn_mean,
+    "mean_nd": fn_mean_nd,
+}
 
 
 class sampleData:
@@ -395,74 +409,35 @@ def main():
 
 
 def normal_exp(exp_name):
-    if exp_name == "max" or exp_name == "all":
-        batch_ex_normal(fn_max)
-    if exp_name == "var" or exp_name == "all":
-        batch_ex_normal(fn_var)
-    if exp_name == "median" or exp_name == "all":
-        batch_ex_normal(fn_median)
-    if exp_name == "median_min" or exp_name == "all":
-        batch_ex_normal(fn_median_min)
-    if exp_name == "var_mu" or exp_name == "all":
-        batch_ex_normal(fn_var_mu)
-    if exp_name == "var_nd" or exp_name == "all":
-        batch_ex_normal(fn_var_nd)
-    if exp_name == "stdev" or exp_name == "all":
-        batch_ex_normal(fn_stdev)
+    if exp_name == "all":
+        for fn_name in fn_dict:
+            batch_ex_normal(fn_dict[fn_name])
+    else:
+        batch_ex_normal(fn_dict[exp_name])
 
 
 def lognormal_exp(exp_name):
-
-    if exp_name == "max" or exp_name == "all":
-        batch_ex_lognormal(fn_max)
-    if exp_name == "var" or exp_name == "all":
-        batch_ex_lognormal(fn_var)
-    if exp_name == "median" or exp_name == "all":
-        batch_ex_lognormal(fn_median)
-    if exp_name == "median_min" or exp_name == "all":
-        batch_ex_lognormal(fn_median_min)
-    if exp_name == "var_mu" or exp_name == "all":
-        batch_ex_lognormal(fn_var_mu)
-    if exp_name == "var_nd" or exp_name == "all":
-        batch_ex_lognormal(fn_var_nd)
-    if exp_name == "stdev" or exp_name == "all":
-        batch_ex_lognormal(fn_stdev)
+    if exp_name == "all":
+        for fn_name in fn_dict:
+            batch_ex_lognormal(fn_dict[fn_name])
+    else:
+        batch_ex_lognormal(fn_dict[exp_name])
 
 
 def uniform_exp(exp_name):
-
-    if exp_name == "max" or exp_name == "all":
-        batch_ex_uniform_int(fn_max)
-    if exp_name == "var" or exp_name == "all":
-        batch_ex_uniform_int(fn_var)
-    if exp_name == "median" or exp_name == "all":
-        batch_ex_uniform_int(fn_median)
-    if exp_name == "median_min" or exp_name == "all":
-        batch_ex_uniform_int(fn_median_min)
-    if exp_name == "var_mu" or exp_name == "all":
-        batch_ex_uniform_int(fn_var_mu)
-    if exp_name == "var_nd" or exp_name == "all":
-        batch_ex_uniform_int(fn_var_nd)
-    if exp_name == "stdev" or exp_name == "all":
-        batch_ex_uniform_int(fn_stdev)
+    if exp_name == "all":
+        for fn_name in fn_dict:
+            batch_ex_uniform_int(fn_dict[fn_name])
+    else:
+        batch_ex_uniform_int(fn_dict[exp_name])
 
 
 def poisson_exp(exp_name):
-
-    if exp_name == "max" or exp_name == "all":
-        batch_ex_poisson(fn_max)
-    if exp_name == "var" or exp_name == "all":
-        batch_ex_poisson(fn_var)
-    if exp_name == "median" or exp_name == "all":
-        batch_ex_poisson(fn_median)
-    if exp_name == "median_min" or exp_name == "all":
-        batch_ex_poisson(fn_median_min)
-    if exp_name == "var_mu" or exp_name == "all":
-        batch_ex_poisson(fn_var_mu)
-    if exp_name == "var_nd" or exp_name == "all":
-        batch_ex_poisson(fn_var_nd)
-    if exp_name == "stdev" or exp_name == "all":
-        batch_ex_poisson(fn_stdev)
+    if exp_name == "all":
+        for fn_name in fn_dict:
+            batch_ex_poisson(fn_dict[fn_name])
+    else:
+        batch_ex_poisson(fn_dict[exp_name])
 
 
 def update_p_str_json():
