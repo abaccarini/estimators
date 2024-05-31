@@ -44,7 +44,6 @@ def plot_mu_var(dist, param_str):
         ax2.set_xticklabels(xlabels)
         plt.xticks(fontsize=18)
 
-        # ax2.set_xticklabels([r"$\lambda = %s$" % lam], rotation=0, color="red")
     if dist == "uniform_int":
         tick_upper = 2
         a, b = getParams(dist, param_str)
@@ -127,7 +126,7 @@ def plot_mu_var(dist, param_str):
         plt.xticks(fontsize=18, rotation=45)
 
     lower_bound, upper_bound = getBounds(dist, param_str)
-    cc = itertools.cycle(colors)
+    cc = itertools.cycle(["blue", "orange"])
     alph = 0.5
 
     spec_vals = [2, 5]
@@ -143,13 +142,13 @@ def plot_mu_var(dist, param_str):
 
     with open(path + "/" + file) as json_file:
         mean_json = json.load(json_file)
-        
+
     t_init = mean_json["target_init_entropy"]
 
     mean_data = []
     for s in spec_vals:
         mean_data.append(mean_json["awae_data"][str(s)])
-        
+
     fname = "var"
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
@@ -161,7 +160,7 @@ def plot_mu_var(dist, param_str):
     for s in spec_vals:
         var_data.append(var_json["awae_data"][str(s)])
 
-    fname = "mu_var"
+    fname = "var_mu"
     path = data_dir + fname + "/" + dist
     files = os.listdir(path)
     file = [f for f in files if Path(f).stem == param_str][0]
@@ -170,123 +169,94 @@ def plot_mu_var(dist, param_str):
     mu_var_data = []
     for s in spec_vals:
         mu_var_data.append(mu_var_json["awae_data"][str(s)])
-
-
-
-
-
-    for fname in fnames:
-        path = data_dir + fname + "/" + dist
-        files = os.listdir(path)
-        # print(path)
-
-        file = [f for f in files if Path(f).stem == param_str][0]
-
-        with open(path + "/" + file) as json_file:
-            json_data = json.load(json_file)
+    
+    for md, vd, mvd, numSpec in zip(mean_data, var_data, mu_var_data, spec_vals):
 
         plot_lines = []
 
-        # leakage_no_A = json_data["leakage_no_attacker"]
 
         lsty = itertools.cycle(linestys)
         mst = itertools.cycle(msty)
         c = next(cc)
-        for numSpec, val in json_data["awae_data"].items():
+        def plotfn_cont(ubound):
+            x_A = list(map(float, list( md.keys() )))
+            awae_mu = list(md.values())
+            awae_var =list( vd.values())
+            awae_mu_var =list( mvd.values())
+            awae_mu_plus_var = [x + y for x,y in zip(awae_mu, awae_var)]
 
-            def plotfn_cont(ubound):
-                x_A = np.array([float(xi) for xi, vv in val.items()])
-                if max(x_A) > ubound:
-                    ubound = max(x_A)
-                    global upper_bound
-                    upper_bound = ubound
-                ls = next(lsty)
-                ms = next(mst)
 
-                awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-                # awae = [x for x in awae if x > lower_bound and x < ubound]
-                yhat = savgol_filter(awae, 51, 3)  # window size 51, polynomial order 3
-                label = r"$\lvert S\rvert = %s$" % numSpec
-                (l2,) = plt.plot(
-                    x_A,
-                    yhat,
-                    marker="",
-                    color=c,
-                    alpha=alph,
-                    linestyle=ms,
-                    label=label,
-                )
-                plot_lines.append(l2)
+            if max(x_A) > ubound:
+                ubound = max(x_A)
+                global upper_bound
+                upper_bound = ubound
+            ls = next(lsty)
+            ms = next(mst)
 
-            def plotfn_disc():
-                ls = next(lsty)
-                x_A = np.array([np.array(xi) for xi, vv in val.items()])
-                awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-                print(awae)
-                label = r"$\lvert S\rvert = %s$" % numSpec
-                (l2,) = plt.plot(
-                    x_A[lower_bound:upper_bound],
-                    awae[lower_bound:upper_bound],
-                    marker=ls,
-                    color=c,
-                    alpha=alph,
-                    linestyle="-",
-                    label=label,
-                )
-                plot_lines.append(l2)
+            awae_mu_var  = savgol_filter(awae_mu_var , 51, 3)  # window size 51, polynomial order 3
+            awae_mu_plus_var = savgol_filter(awae_mu_plus_var, 51, 3)  # window size 51, polynomial order 3
+            label = r"$\lvert S\rvert = %s$" % numSpec
+            (l2,) = plt.plot(
+                x_A,
+                awae_mu_var,
+                marker="",
+                color=c,
+                alpha=alph,
+                linestyle="--",
+                label=label,
+            )
+            (l2,) = plt.plot(
+                x_A,
+                awae_mu_plus_var,
+                marker="",
+                color=c,
+                alpha=alph,
+                linestyle="-",
+                label=label,
+            )
+            plot_lines.append(l2)
 
-            if int(numSpec) in spec_vals:
-                if dist in ["normal", "lognormal"]:
-                    plotfn_cont(upper_bound)
-                elif dist in ["uniform_int", "poisson"]:
-                    plotfn_disc()
+        def plotfn_disc():
+            x_A = list( md.keys() )
+            awae_mu = list(md.values())
+            awae_var =list( vd.values())
+            awae_mu_var =list( mvd.values())
+            awae_mu_plus_var = [x + y for x,y in zip(awae_mu, awae_var)]
+
+            label = r"$\lvert S\rvert = %s$" % numSpec
+
+            (l2,) = plt.plot(
+                x_A[lower_bound:upper_bound],
+                awae_mu_var  [lower_bound:upper_bound],
+                marker="x",
+                color=c,
+                alpha=alph,
+                linestyle="--",
+                label=label,
+            )
+            (l2,) = plt.plot(
+                x_A[lower_bound:upper_bound],
+                awae_mu_plus_var [lower_bound:upper_bound],
+                marker="o",
+                color=c,
+                alpha=alph,
+                linestyle="-",
+                label=label,
+            )
+            plot_lines.append(l2)
+
+        if dist in ["normal", "lognormal"]:
+            plotfn_cont(upper_bound)
+        elif dist in ["uniform_int", "poisson"]:
+            plotfn_disc()
 
         plt.xticks(
             np.arange(lower_bound, upper_bound, 1), minor=True
         )  # set minor ticks on x-axis
-        plt.yticks(
-            np.arange(lower_bound, upper_bound, 1), minor=True
-        )  # set minor ticks on y-axis
+        # plt.yticks(
+        #     np.arange(lower_bound, upper_bound, 1), minor=True
+        # )  # set minor ticks on y-axis
         plt.tick_params(which="minor", length=0)  # remove minor tick lines
-
-        target_init_label = r"$H(X_T)$"
-        ax.hlines(
-            y=json_data["target_init_entropy"],
-            xmin=lower_bound,
-            xmax=(upper_bound) - 1,
-            linewidth=2,
-            color="black",
-            label=target_init_label,
-        )
-
-        hline_legened = [
-            Line2D(
-                [0],
-                [0],
-                color="black",
-                marker="",
-                alpha=0.9,
-                linestyle="--",
-                label=r"$H(X_T \mid O)$",
-            )
-        ]
-        # legend2 = plt.legend(
-        #     handles=hline_legened,
-        #     loc="best",
-        #     # bbox_to_anchor=(1.3, 1.0),
-        #     fontsize=14,
-        # )
-        # plt.gca().add_artist(legend2)
-
-        plt.text(
-            0.5,
-            0.95,
-            target_init_label,
-            transform=ax.transAxes,
-            ha="center",
-            va="center",
-            bbox={"facecolor": "white", "alpha": 0.95, "pad": 0, "edgecolor": "white"},
-        )
 
     out_path = fig_dir + full_fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
@@ -300,45 +270,27 @@ def plot_mu_var(dist, param_str):
 
 def generateLegend():
     figl, axl = plt.subplots()
-    # leakage_leg = [
-    #     Line2D(
-    #         [0],
-    #         [0],
-    #         color="black",
-    #         marker="o",
-    #         alpha=0.9,
-    #         linestyle="-",
-    #         label=r"$H(X_T \mid O, X_A = x_A)$",
-    #     ),
-    #     Line2D(
-    #         [0],
-    #         [0],
-    #         color="black",
-    #         marker="",
-    #         alpha=0.9,
-    #         linestyle="--",
-    #         label=r"$H(X_T \mid O)$",
-    #     ),
-    # ]
-    fn_names = [r"$f_{\mu}$", r"$f_{\sigma^{2}}$", r"$f_{(\mu,\sigma^{2})}$"]
+    
+    fn_names = [r"$H_{f_{\mu}} + H_{f_{\sigma^{2}}}$", r"$H_{f_{(\mu,\sigma^{2})}}$"]
+    marks = ["o", "x"]
+    lsts = ["-", "--"]
     fn_leg = [
         Line2D(
             [0],
             [0],
-            color=colors[i],
-            marker="",
-            alpha=0.9,
-            linestyle="-",
+            color="black",
+            marker=mk,
+            alpha=0.7,
+            linestyle=ls,
             label=r"$%s$" % fname,
         )
-        for i, fname in enumerate(fn_names)
+        for fname, mk, ls in zip(fn_names,marks, lsts)
     ]
     spec_leg = [
         Line2D(
             [0],
             [0],
-            color="black",
-            marker="o",
+            color="blue",
             alpha=0.9,
             linestyle="-",
             label=r"$\lvert S\rvert = 2$",
@@ -346,10 +298,9 @@ def generateLegend():
         Line2D(
             [0],
             [0],
-            color="black",
-            marker="x",
+            color="orange",
             alpha=0.9,
-            linestyle="--",
+            linestyle="-",
             label=r"$\lvert S\rvert = 5$",
         ),
     ]
@@ -381,9 +332,6 @@ def generateLegend():
         ncol=1,
         # handlelength=1,
     )
-    # leg2.remove()
-    # leg1._legend_box._children.append(leg2._legend_handle_box)
-    # leg1._legend_box.stale = True
 
     plt.savefig(
         fig_dir + "/mu_var_comp/legend_text_only" + ".pdf",
@@ -402,12 +350,12 @@ def main():
 
     disc_dists = [
         "uniform_int",
-        # "poisson",
+        "poisson",
     ]
 
     cont_dists = [
-        # "normal",
-        # "lognormal",
+        "normal",
+        "lognormal",
     ]
 
     for dname in disc_dists:
