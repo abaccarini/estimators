@@ -9,6 +9,9 @@ import numpy as np
 from pathlib import Path
 from matplotlib.lines import Line2D
 from scipy.signal import savgol_filter
+from os.path import expanduser
+
+home = expanduser("~")
 
 plt.rcParams.update(
     {
@@ -38,11 +41,15 @@ func_names = [
     "median",
     "median_min",
     "var",
+    "mean",
+    "mean_nd",
+    "all_fns",
 ]
 
 distributions = ["uniform_int", "uniform_real", "normal", "lognormal", "poisson"]
 data_dir = "../output_k1/"
-fig_dir = "../figs/"
+fig_dir = home + "/Dropbox/func_eval/estimators/figs/"
+# fig_dir = "../figs/"
 
 
 def verify_args(fname, dist):
@@ -226,7 +233,7 @@ def plot_discrete(fname, dist, param_str):
                 c = col
             x_A = np.array([np.array(xi) for xi, vv in val.items()])
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
-            label = r"$\lvert S\rvert\ = %s$" % numSpec
+            label = r"$\lvert S\rvert = %s$" % numSpec
             (l2,) = plt.plot(
                 x_A[lower_bound:upper_bound],
                 awae[lower_bound:upper_bound],
@@ -439,7 +446,7 @@ def plot_cont(fname, dist, param_str):
             awae = np.array([t_init - np.array(vv) for xi, vv in val.items()])
             # awae = [x for x in awae if x > lower_bound and x < ubound]
             yhat = savgol_filter(awae, 51, 3)  # window size 51, polynomial order 3
-            label = r"$\lvert S\rvert\ = %s$" % numSpec
+            label = r"$\lvert S\rvert = %s$" % numSpec
             (l2,) = plt.plot(
                 x_A, yhat, marker="", color=c, alpha=alph, linestyle="-", label=label
             )
@@ -528,7 +535,6 @@ def plot_cont(fname, dist, param_str):
         bbox={"facecolor": "white", "alpha": 0.95, "pad": 0, "edgecolor": "white"},
     )
 
-
     # plt.text(
     #     0.5,
     #     -0.25,
@@ -553,7 +559,7 @@ def plot_cont(fname, dist, param_str):
             out_path + "/" + param_str + "_cont_leakage.pdf",
             bbox_inches="tight",
         )
-    
+
     plt.close("all")
 
 
@@ -564,12 +570,12 @@ def generateLegend():
             [0],
             [0],
             color="black",
-            marker="",
+            marker="o",
             alpha=0.9,
             linestyle="-",
             label=r"$H(X_T \mid O, X_A = x_A)$",
         ),
-         Line2D(
+        Line2D(
             [0],
             [0],
             color="black",
@@ -577,8 +583,8 @@ def generateLegend():
             alpha=0.9,
             linestyle="--",
             label=r"$H(X_T \mid O)$",
-        )
-    ]    
+        ),
+    ]
     all_specs_legend = [
         Line2D(
             [0],
@@ -587,17 +593,17 @@ def generateLegend():
             marker="",
             alpha=0.9,
             linestyle="-",
-            label=r"$\lvert S\rvert\ = %s$" % numSpec,
+            label=r"$\lvert S\rvert = %s$" % numSpec,
         )
         for numSpec in range(1, 11)
     ]
     # no_a_legend = [
-       
+
     # ]
     # # figl2, axl2 = plt.subplots(figsize=(0, 0))
     plt.axis(False)
-    axl.margins(0,0)
-    figl.subplots_adjust(left=0,right=0.6,bottom=0,top=0.5)
+    axl.margins(0, 0)
+    figl.subplots_adjust(left=0, right=0.6, bottom=0, top=0.5)
     leg1 = plt.legend(
         # handles=reorder(all_specs_legend, 5),
         handles=all_specs_legend,
@@ -644,7 +650,7 @@ def generateLegend():
 
 def main():
     generateLegend()
-    return
+    # return
     json_fname = data_dir + "p_strs.json"
     fname = open(json_fname)
     param_strs_dict = json.load(fname)
