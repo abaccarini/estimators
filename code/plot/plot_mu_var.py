@@ -2,6 +2,19 @@ from scipy.linalg import null_space
 from plot_ksg_est import *
 
 
+from matplotlib import rc
+rc("font", **{"family": "serif", "serif": ["Computer Modern"], "size": 18})
+
+plt.rcParams.update( {
+        "font.size": 18,
+        "text.usetex": True,
+        "text.latex.preamble": r"\usepackage{amsmath,amssymb,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
+        # "pgf.texsystem": "pdflatex",  # or any other engine you want to use
+        "pgf.preamble": r"\usepackage{amsmath,amssymb,mathtools}",
+    }
+)
+mpl.use("pgf")
+
 def plot_mu_var(dist, param_str):
     full_fname = "mu_var_comp"
     # verify_args(fname, dist)
@@ -57,10 +70,10 @@ def plot_mu_var(dist, param_str):
             + [mean + stdev * i for i in range(1, tick_upper)]
         )
         xlabels = (
-            [r"$n {-} %s \sigma$" % (i if i > 1 else "") for i in range(1, tick_upper)]
-            + [r"$n$"]
+            [r"$N {-} %s \sigma$" % (i if i > 1 else "") for i in range(1, tick_upper)]
+            + [r"$N$"]
             + [
-                r"$n {+} %s \sigma$" % (i if i > 1 else "")
+                r"$N {+} %s \sigma$" % (i if i > 1 else "")
                 for i in range(1, tick_upper)
             ]
         )
@@ -261,7 +274,10 @@ def plot_mu_var(dist, param_str):
     out_path = fig_dir + full_fname + "/" + dist
     Path(out_path).mkdir(parents=True, exist_ok=True)
     plt.savefig(
-        # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
+        out_path + "/" + param_str + "_leakage.pgf",
+        bbox_inches="tight",
+    )
+    plt.savefig(
         out_path + "/" + param_str + "_leakage.pdf",
         bbox_inches="tight",
     )
@@ -282,7 +298,7 @@ def generateLegend():
             marker=mk,
             alpha=0.7,
             linestyle=ls,
-            label=r"$%s$" % fname,
+            label=r"%s" % fname,
         )
         for fname, mk, ls in zip(fn_names,marks, lsts)
     ]
@@ -333,6 +349,11 @@ def generateLegend():
         # handlelength=1,
     )
 
+    plt.savefig(
+        fig_dir + "/mu_var_comp/legend_text_only" + ".pgf",
+        bbox_inches="tight",
+        pad_inches=0,
+    )
     plt.savefig(
         fig_dir + "/mu_var_comp/legend_text_only" + ".pdf",
         bbox_inches="tight",

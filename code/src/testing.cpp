@@ -4,7 +4,7 @@
 #include "functions.hpp"
 #include "knn_est.hpp"
 #include "plug-in_est.hpp"
-#include "pmfs.hpp"
+// #include "pmfs.hpp"
 #include "utilities.hpp"
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
@@ -174,7 +174,7 @@ void test_knn_est() {
     est.x_A = x_A;
     std::cout << "Target_init_entropy : " << est.target_init_entropy << std::endl;
 
-    cout<<est.estimate_leakage()<<endl;
+    cout << est.estimate_leakage() << endl;
     // cout<<est.estimate_leakage()<<endl;
     // cout<<est.estimate_leakage()<<endl;
     // cout<<est.evaluate_pdf(0.5)<<endl;

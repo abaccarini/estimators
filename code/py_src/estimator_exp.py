@@ -51,6 +51,12 @@ def median_min(x):
     return x[int(x.size / 2)]
 
 
+def median_mean(x):
+    x = np.sort(x)
+    return np.asarray([ x[int(x.size / 2)] , np.mean(x)])
+
+
+
 # a = [1, 4, 5, 3, 2, 6]
 # a = np.array(a)
 # a = [1, 4, 5, 3, 2]
@@ -63,6 +69,7 @@ fn_max = func(np.max, "max")
 fn_var = func(np.var, "var")
 fn_median = func(np.median, "median")
 fn_median_min = func(median_min, "median_min")
+fn_median_mean = func(median_mean, "median_min")
 fn_var_mu = func(var_mu, "var_mu")
 fn_var_nd = func(var_nd, "var_nd")
 fn_stdev = func(np.std, "stdev")
@@ -76,6 +83,7 @@ fn_dict = {
     "var": fn_var,
     "median": fn_median,
     "median_min": fn_median_min,
+    "median_mean": fn_median_mean,
     "var_mu": fn_var_mu,
     "var_nd": fn_var_nd,
     "stdev": fn_stdev,

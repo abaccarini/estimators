@@ -1,3 +1,5 @@
+import matplotlib as mpl
+
 import json
 import numpy as np
 import os
@@ -11,16 +13,23 @@ from matplotlib.lines import Line2D
 from scipy.signal import savgol_filter
 from os.path import expanduser
 
+from matplotlib import rc
+rc("font", **{"family": "serif", "serif": ["Computer Modern"], "size": 18})
+
 home = expanduser("~")
 
 plt.rcParams.update(
     {
         "font.size": 18,
         "text.usetex": True,
-        "text.latex.preamble": r"\usepackage{amsfonts,amsmath,amssymb,sfmath,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
+        "text.latex.preamble": r"\usepackage{amsmath,amssymb,mathtools}\newcommand\floor[1]{\lfloor#1\rfloor} \newcommand\ceil[1]{\lceil#1\rceil} ",
+        # "pgf.texsystem": "pdflatex",  # or any other engine you want to use
+        "pgf.preamble": r"\usepackage{amsmath,amssymb,mathtools}",
     }
 )
+
 np.seterr(divide="ignore", invalid="ignore")
+mpl.use("pgf")
 
 colors = [
     "red",
@@ -191,10 +200,10 @@ def plot_discrete(fname, dist, param_str):
             + [mean + stdev * i for i in range(1, tick_upper)]
         )
         xlabels = (
-            [r"$n {-} %s \sigma$" % (i if i > 1 else "") for i in range(1, tick_upper)]
-            + [r"$n$"]
+            [r"$N {-} %s \sigma$" % (i if i > 1 else "") for i in range(1, tick_upper)]
+            + [r"$N$"]
             + [
-                r"$n {+} %s \sigma$" % (i if i > 1 else "")
+                r"$N {+} %s \sigma$" % (i if i > 1 else "")
                 for i in range(1, tick_upper)
             ]
         )
@@ -330,11 +339,21 @@ def plot_discrete(fname, dist, param_str):
     Path(out_path).mkdir(parents=True, exist_ok=True)
     if fname == "median" or fname == "median_min":
         plt.savefig(
+            out_path + "/" + param_str + "_" + oe_str[oe_key] + "_discrete_leakage.pgf",
+            # out_path + "/" + param_str + "_discrete_leakage.pdf",
+            bbox_inches="tight",
+        )
+        plt.savefig(
             out_path + "/" + param_str + "_" + oe_str[oe_key] + "_discrete_leakage.pdf",
             # out_path + "/" + param_str + "_discrete_leakage.pdf",
             bbox_inches="tight",
         )
     else:
+        plt.savefig(
+            # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
+            out_path + "/" + param_str + "_discrete_leakage.pgf",
+            bbox_inches="tight",
+        )
         plt.savefig(
             # out_path + "/" + param_str + "_" +oe_str[oe_key]+"_discrete_leakage.pdf",
             out_path + "/" + param_str + "_discrete_leakage.pdf",
@@ -551,10 +570,18 @@ def plot_cont(fname, dist, param_str):
     Path(out_path).mkdir(parents=True, exist_ok=True)
     if fname == "median" or fname == "median_min":
         plt.savefig(
+            out_path + "/" + param_str + "_" + oe_str[oe_key] + "_cont_leakage.pgf",
+            bbox_inches="tight",
+        )
+        plt.savefig(
             out_path + "/" + param_str + "_" + oe_str[oe_key] + "_cont_leakage.pdf",
             bbox_inches="tight",
         )
     else:
+        plt.savefig(
+            out_path + "/" + param_str + "_cont_leakage.pgf",
+            bbox_inches="tight",
+        )
         plt.savefig(
             out_path + "/" + param_str + "_cont_leakage.pdf",
             bbox_inches="tight",
@@ -593,7 +620,7 @@ def generateLegend():
             marker="",
             alpha=0.9,
             linestyle="-",
-            label=r"$\lvert S\rvert = %s$" % numSpec,
+            label=r"$\left\lvert S\right\rvert = %s$" % numSpec,
         )
         for numSpec in range(1, 11)
     ]
@@ -639,6 +666,15 @@ def generateLegend():
     # leg2.remove()
     # leg1._legend_box._children.append(leg2._legend_handle_box)
     # leg1._legend_box.stale = True
+
+    plt.savefig(
+        fig_dir + "legend_text_only" + ".pgf",
+        bbox_inches="tight",
+        pad_inches=0,
+    )
+    # import tikzplotlib
+
+    # tikzplotlib.save("test.tex")
 
     plt.savefig(
         fig_dir + "legend_text_only" + ".pdf",
